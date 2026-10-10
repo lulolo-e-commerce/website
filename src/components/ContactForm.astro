@@ -1,0 +1,241 @@
+---
+import { site, contact } from '../content';
+
+const { form } = contact;
+const action = form.endpoint || `mailto:${site.email}`;
+---
+
+<form
+  class="contact-form"
+  action={action}
+  method="post"
+  novalidate
+  data-endpoint={form.endpoint}
+  data-email={site.email}
+  data-sending={form.sending}
+  data-sent={form.sent}
+  data-drafted={form.drafted}
+  data-failed={form.failed}
+>
+  <div class="field">
+    <label for="cf-name">{form.fields.name}</label>
+    <input id="cf-name" name="name" type="text" autocomplete="name" required
+      aria-describedby="cf-name-error" data-error={form.errors.name} />
+    <p class="error" id="cf-name-error" hidden></p>
+  </div>
+
+  <div class="field">
+    <label for="cf-email">{form.fields.email}</label>
+    <input id="cf-email" name="email" type="email" autocomplete="email" required
+      aria-describedby="cf-email-error" data-error={form.errors.email} />
+    <p class="error" id="cf-email-error" hidden></p>
+  </div>
+
+  <div class="field field-wide">
+    <label for="cf-company">
+      {form.fields.company} <span class="hint">{form.fields.companyHint}</span>
+    </label>
+    <input id="cf-company" name="company" type="text" autocomplete="organization" />
+  </div>
+
+  <div class="field field-wide">
+    <label for="cf-message">{form.fields.message}</label>
+    <p class="hint" id="cf-message-hint">{form.fields.messageHint}</p>
+    <textarea id="cf-message" name="message" rows="6" required minlength="10"
+      aria-describedby="cf-message-hint cf-message-error" data-error={form.errors.message}></textarea>
+    <p class="error" id="cf-message-error" hidden></p>
+  </div>
+
+  <!-- Spam trap: hidden from people, often filled in by bots. -->
+  <div class="trap" aria-hidden="true">
+    <label for="cf-website">Website</label>
+    <input id="cf-website" name="_gotcha" type="text" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <div class="submit-row field-wide">
+    <button class="button" type="submit">{form.submit}</button>
+    <p class="status" role="status" aria-live="polite"></p>
+  </div>
+</form>
+
+<script>
+  for (const form of document.querySelectorAll<HTMLFormElement>('.contact-form')) {
+    const status = form.querySelector<HTMLElement>('.status')!;
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    const label = button.textContent;
+    const d = form.dataset;
+    const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-error]')];
+
+    const check = (el: HTMLInputElement | HTMLTextAreaElement) => {
+      el.value = el.value.trimStart();
+      const ok = el.value.trim() !== '' && el.checkValidity();
+      const msg = document.getElementById(`${el.id}-error`)!;
+      el.toggleAttribute('aria-invalid', !ok);
+      msg.hidden = ok;
+      msg.textContent = ok ? '' : el.dataset.error!;
+      return ok;
+    };
+
+    // Re-check a field as soon as the person fixes it.
+    for (const el of fields) {
+      el.addEventListener('input', () => {
+        if (el.hasAttribute('aria-invalid')) check(el);
+      });
+    }
+
+    const setStatus = (text: string, tone: 'ok' | 'bad' | '' = '') => {
+      status.textContent = text;
+      status.dataset.tone = tone;
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      setStatus('');
+      const invalid = fields.filter((el) => !check(el));
+      if (invalid.length) {
+        invalid[0].focus();
+        return;
+      }
+
+      const data = new FormData(form);
+      if (data.get('_gotcha')) return;
+
+      if (!d.endpoint) {
+        const subject = `Project enquiry from ${data.get('name')}`;
+        const company = data.get('company') ? `Company: ${data.get('company')}\n` : '';
+        const body = `${data.get('message')}\n\n${data.get('name')}\n${data.get('email')}\n${company}`;
+        window.location.href = `mailto:${d.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        setStatus(d.drafted!, 'ok');
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = d.sending!;
+      try {
+        const res = await fetch(d.endpoint, {
+          method: 'POST',
+          body: data,
+          headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        form.reset();
+        setStatus(d.sent!, 'ok');
+      } catch {
+        setStatus(d.failed!, 'bad');
+      } finally {
+        button.disabled = false;
+        button.textContent = label;
+      }
+    });
+  }
+</script>
+
+<style>
+  .contact-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1.25rem;
+    margin-top: 2.25rem;
+  }
+  .field {
+    display: grid;
+    gap: 0.4rem;
+    align-content: start;
+  }
+  .field-wide {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-size: var(--step-0);
+    font-weight: 500;
+  }
+  .hint {
+    font-size: var(--step-0);
+    font-weight: 400;
+    color: var(--lead);
+  }
+  label .hint {
+    margin-left: 0.35em;
+  }
+  .field > .hint {
+    margin-top: -0.2rem;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    font: inherit;
+    font-size: var(--step-1);
+    color: var(--ink);
+    background: var(--field);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.65rem 0.8rem;
+  }
+  textarea {
+    resize: vertical;
+    min-height: 9rem;
+    line-height: 1.5;
+  }
+  input:hover,
+  textarea:hover {
+    border-color: var(--lead);
+  }
+  input:focus,
+  textarea:focus {
+    border-color: var(--accent);
+  }
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+  }
+  [aria-invalid] {
+    border-color: var(--danger);
+  }
+  .error {
+    font-size: var(--step-0);
+    color: var(--danger);
+  }
+
+  .trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .submit-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    margin-top: 0.25rem;
+  }
+  button.button {
+    border: 0;
+    font: inherit;
+    font-size: var(--step-0);
+    font-weight: 500;
+    cursor: pointer;
+  }
+  button.button:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  .status {
+    font-size: var(--step-0);
+    max-width: 30rem;
+  }
+  .status[data-tone='bad'] {
+    color: var(--danger);
+  }
+
+  @media (max-width: 30rem) {
+    .contact-form {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

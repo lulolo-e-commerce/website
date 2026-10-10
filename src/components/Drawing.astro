@@ -1,0 +1,174 @@
+---
+// Hero drawing: the three specialities as one system, drawn like a technical
+// diagram. Sources feed a data pipeline, the pipeline feeds a web app, and an
+// AI agent works across both.
+import { hero } from '../content';
+
+const sources = [140, 185, 230];
+const stages = [110, 157, 203];
+const rows = [160, 185, 210, 235, 260, 285];
+// Placeholder "cell text" per row: [x1, x2] pairs, varied so it reads as data.
+const cells = [
+  [[304, 340], [356, 410], [440, 474]],
+  [[304, 332], [356, 424], [440, 468]],
+  [[304, 344], [356, 400], [440, 476]],
+  [[304, 326], [356, 418], [440, 462]],
+  [[304, 338], [356, 406], [440, 472]],
+];
+const { pipeline, app, agent } = hero.drawing;
+---
+
+<figure class="drawing" aria-label="Diagram: data sources feed a data pipeline, which feeds a web application. An AI agent works across both.">
+  <svg viewBox="0 0 520 420" aria-hidden="true">
+    <g class="stroke frame">
+      <!-- data sources -->
+      {sources.map((y) => <rect x="20" y={y} width="64" height="30" pathLength="1" />)}
+      <!-- pipeline with three stages -->
+      <rect x="110" y="180" width="140" height="40" pathLength="1" />
+      <line x1="157" y1="180" x2="157" y2="220" pathLength="1" />
+      <line x1="203" y1="180" x2="203" y2="220" pathLength="1" />
+      <!-- web app window -->
+      <rect x="290" y="90" width="200" height="220" pathLength="1" />
+      <line x1="290" y1="112" x2="490" y2="112" pathLength="1" />
+    </g>
+
+    <g class="stroke content">
+      {sources.map((y) => <line class="text" x1="30" y1={y + 15} x2="66" y2={y + 15} pathLength="1" />)}
+      <!-- flow: sources into pipeline -->
+      <line class="flow" x1="84" y1="155" x2="110" y2="194" pathLength="1" />
+      <line class="flow" x1="84" y1="200" x2="110" y2="200" pathLength="1" />
+      <line class="flow" x1="84" y1="245" x2="110" y2="206" pathLength="1" />
+      {stages.map((x) => (
+        <polyline class="flow" points={`${x + 20},194 ${x + 27},200 ${x + 20},206`} pathLength="1" />
+      ))}
+      <!-- flow: pipeline into app -->
+      <line class="flow" x1="250" y1="200" x2="289" y2="200" pathLength="1" />
+      <polyline class="flow" points="282,194 289,200 282,206" pathLength="1" />
+      <!-- app contents -->
+      <line class="text" x1="302" y1="101" x2="350" y2="101" pathLength="1" />
+      <line class="header" x1="302" y1="135" x2="478" y2="135" pathLength="1" />
+      {rows.map((y) => <line x1="302" y1={y} x2="478" y2={y} pathLength="1" />)}
+      {cells.map((row, i) =>
+        row.map(([a, b]) => (
+          <line class="text" x1={a} y1={rows[i] + 12.5} x2={b} y2={rows[i] + 12.5} pathLength="1" />
+        ))
+      )}
+    </g>
+
+    <circle class="agent" cx="200" cy="320" r="24" />
+    <g class="stroke links">
+      <!-- the agent reads from the pipeline and acts in the app -->
+      <line x1="185" y1="301" x2="180" y2="220" pathLength="1" />
+      <line x1="223" y1="312" x2="290" y2="285" pathLength="1" />
+    </g>
+
+    <g class="stroke leaders">
+      <polyline points="130,180 130,58 138,58" pathLength="1" />
+      <polyline points="318,90 318,40 326,40" pathLength="1" />
+      <polyline class="accent" points="215,339 240,372 250,372" pathLength="1" />
+    </g>
+    <circle class="dot" cx="130" cy="180" r="2.5" />
+    <circle class="dot" cx="318" cy="90" r="2.5" />
+    <circle class="dot accent" cx="200" cy="320" r="3" />
+  </svg>
+
+  <span class="note note-pipeline">{pipeline}</span>
+  <span class="note note-app">{app}</span>
+  <span class="note note-agent">{agent}</span>
+</figure>
+
+<style>
+  .drawing {
+    position: relative;
+    margin: 0;
+    aspect-ratio: 520 / 420;
+    width: 100%;
+  }
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .stroke :global(*) {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.25;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: square;
+  }
+  .content :global(*) {
+    stroke: var(--rule);
+  }
+  .content .text {
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+  .content .header,
+  .content .flow {
+    stroke: var(--lead);
+  }
+  .links :global(*) {
+    stroke: var(--accent);
+  }
+  .agent {
+    fill: var(--wash);
+    stroke: var(--accent);
+    stroke-width: 1.25;
+    vector-effect: non-scaling-stroke;
+  }
+  .leaders :global(*) {
+    stroke: var(--lead);
+    stroke-width: 1;
+  }
+  .leaders .accent {
+    stroke: var(--accent);
+  }
+  .dot {
+    fill: var(--lead);
+  }
+  .dot.accent {
+    fill: var(--accent);
+  }
+
+  .note {
+    position: absolute;
+    transform: translateY(-50%);
+    padding-left: 0.35em;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .note-pipeline { left: 26.5%; top: 13.8%; }
+  .note-app { left: 62.7%; top: 9.5%; }
+  .note-agent { left: 48.1%; top: 88.6%; color: var(--accent); }
+
+  /* One orchestrated draw-in on load: structure, then flow, then the agent and labels. */
+  @media (prefers-reduced-motion: no-preference) {
+    .stroke :global(*) {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: draw 0.8s cubic-bezier(0.6, 0, 0.2, 1) forwards;
+    }
+    .frame :global(*) { animation-delay: 0.1s; }
+    .content :global(*) { animation-delay: 0.6s; animation-duration: 0.6s; }
+    .links :global(*) { animation-delay: 1.35s; animation-duration: 0.4s; }
+    .leaders :global(*) { animation-delay: 1.6s; animation-duration: 0.4s; }
+    .agent, .dot, .note {
+      opacity: 0;
+      animation: appear 0.4s ease-out forwards;
+    }
+    .agent { animation-delay: 1.15s; }
+    .dot { animation-delay: 1.6s; }
+    .note { animation-delay: 1.85s; }
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes appear { to { opacity: 1; } }
+
+  @media (max-width: 30rem) {
+    .note { font-size: 0.6875rem; }
+  }
+</style>
