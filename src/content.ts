@@ -78,7 +78,7 @@ export const contact = {
     // Paste a form service URL here (e.g. https://formspree.io/f/xxxxxxx) to
     // receive submissions. While it's empty, sending opens the visitor's email
     // app with the message filled in.
-    endpoint: '',
+    endpoint: 'https://formspree.io/f/mdeadpwr',
     submit: 'Send message',
     sending: 'Sending…',
     sent: 'Message sent. We’ll be in touch soon.',
