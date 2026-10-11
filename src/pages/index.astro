@@ -116,7 +116,7 @@ const headlineSentences = hero.headline.split(/(?<=\.)\s+/).map((s) => s.split('
           <ContactForm />
           <div class="direct">
             <p>Prefer to write directly?</p>
-            <a class="email" href={`mailto:${site.email}`}>{site.email}</a>
+            <a class="email" href={`mailto:${site.email}`} aria-label={site.email}>{site.email}</a>
             <a class="text-link" href={site.callUrl}>{contact.secondary}</a>
           </div>
         </div>
@@ -129,6 +129,63 @@ const headlineSentences = hero.headline.split(/(?<=\.)\s+/).map((s) => s.split('
     </footer>
   </body>
 </html>
+
+<script>
+  import gsap from 'gsap';
+  import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
+
+  gsap.registerPlugin(DrawSVGPlugin, ScrollTrigger, ScrambleTextPlugin);
+
+  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', (context) => {
+    // Wordmark: on hover, redraw the L through its nodes, then pulse the lit node.
+    // The line reaches a node every 0.125s, so the nodes pop as it passes.
+    const mark = document.querySelector<HTMLElement>('.wordmark')!;
+    const markTl = gsap
+      .timeline({ paused: true, defaults: { immediateRender: false, transformOrigin: '50% 50%' } })
+      .fromTo(mark.querySelector('.mark-link'), { drawSVG: '0%' }, { drawSVG: '100%', duration: 0.5, ease: 'none' })
+      .fromTo(mark.querySelectorAll('circle:not([class])'), { scale: 0.4 },
+        { scale: 1, duration: 0.3, ease: 'back.out(3)', stagger: 0.125 }, 0)
+      .fromTo(mark.querySelector('.mark-lit'), { scale: 1 },
+        { scale: 1.35, duration: 0.18, ease: 'power1.out', yoyo: true, repeat: 1 });
+    const playMark = () => markTl.isActive() || markTl.restart();
+    mark.addEventListener('mouseenter', playMark);
+
+    // Services: rows rise in as they scroll into view, and an accent rule draws
+    // under each one before settling back into the grey border. Triggers are
+    // measured after load, once styles and fonts have settled the layout.
+    const rows = gsap.utils.toArray<HTMLElement>('.spec li.spec-row');
+    gsap.set(rows, { opacity: 0, y: 16 });
+    const watchRows = context.add(() => ScrollTrigger.batch(rows, {
+      start: 'top 88%',
+      once: true,
+      onEnter: (batch) =>
+        gsap
+          .timeline()
+          .to(batch, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', stagger: 0.12 })
+          .fromTo(batch, { '--rule-draw': 0 }, { '--rule-draw': 1, duration: 0.6, ease: 'power2.inOut', stagger: 0.12 }, 0.15)
+          .fromTo(batch, { '--rule-fade': 1 }, { '--rule-fade': 0, duration: 0.8, stagger: 0.12 }, '>-0.1'),
+    }));
+    if (document.readyState === 'complete') watchRows();
+    else window.addEventListener('load', watchRows, { once: true });
+
+    // Email: scramble back into place on hover. The link's aria-label keeps its
+    // accessible name stable while the text changes.
+    const email = document.querySelector<HTMLElement>('.email')!;
+    const address = email.textContent!;
+    const scrambleEmail = () =>
+      gsap.isTweening(email) ||
+      gsap.to(email, { duration: 0.6, scrambleText: { text: address, chars: 'lowerCase', speed: 0.6 } });
+    email.addEventListener('mouseenter', scrambleEmail);
+
+    return () => {
+      mark.removeEventListener('mouseenter', playMark);
+      email.removeEventListener('mouseenter', scrambleEmail);
+      window.removeEventListener('load', watchRows);
+    };
+  });
+</script>
 
 <style>
   /* Header */
@@ -306,6 +363,21 @@ const headlineSentences = hero.headline.split(/(?<=\.)\s+/).map((s) => s.split('
     padding-block: 0 0.75rem;
     font-size: var(--step-0);
     color: var(--lead);
+  }
+  .spec li.spec-row {
+    position: relative;
+  }
+  /* Accent rule drawn under a row as it scrolls in; the script animates the two
+     custom properties, so without it the rule never shows. */
+  .spec li.spec-row::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -1px;
+    height: 1px;
+    background: var(--accent);
+    transform: scaleX(var(--rule-draw, 0));
+    transform-origin: left;
+    opacity: var(--rule-fade, 1);
   }
   .spec h3 {
     font-size: var(--step-2);

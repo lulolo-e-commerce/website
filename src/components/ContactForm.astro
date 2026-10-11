@@ -54,13 +54,23 @@ const action = form.endpoint || `mailto:${site.email}`;
 
   <div class="submit-row field-wide">
     <button class="button" type="submit">{form.submit}</button>
-    <p class="status" role="status" aria-live="polite"></p>
+    <!-- The visible status is animated, so screen readers get a separate, plain copy. -->
+    <p class="status" aria-hidden="true"></p>
+    <p class="visually-hidden" role="status" aria-live="polite"></p>
   </div>
 </form>
 
 <script>
+  import gsap from 'gsap';
+  import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
+
+  gsap.registerPlugin(ScrambleTextPlugin);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
   for (const form of document.querySelectorAll<HTMLFormElement>('.contact-form')) {
     const status = form.querySelector<HTMLElement>('.status')!;
+    const live = form.querySelector<HTMLElement>('[role="status"]')!;
     const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
     const label = button.textContent;
     const d = form.dataset;
@@ -84,8 +94,11 @@ const action = form.endpoint || `mailto:${site.email}`;
     }
 
     const setStatus = (text: string, tone: 'ok' | 'bad' | '' = '') => {
-      status.textContent = text;
+      live.textContent = text;
       status.dataset.tone = tone;
+      gsap.killTweensOf(status);
+      if (!text || reduceMotion.matches) status.textContent = text;
+      else gsap.to(status, { duration: 0.8, scrambleText: { text, chars: 'lowerCase', speed: 0.6 } });
     };
 
     form.addEventListener('submit', async (event) => {

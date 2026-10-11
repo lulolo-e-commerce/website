@@ -15,6 +15,11 @@ const cells = [
   [[304, 326], [356, 418], [440, 462]],
   [[304, 338], [356, 406], [440, 472]],
 ];
+// Routes for the flow animation, in SVG units: each source through the pipeline
+// into the app, then the agent reading from the pipeline and acting in the app.
+const sourceRoutes = ['M84,155 L110,194 L118,200 H289', 'M84,200 H289', 'M84,245 L110,206 L118,200 H289'];
+const readRoute = 'M180,220 L185,301';
+const actRoute = 'M223,312 L290,285';
 const { pipeline, app, agent } = hero.drawing;
 ---
 
@@ -31,6 +36,10 @@ const { pipeline, app, agent } = hero.drawing;
       <rect x="290" y="90" width="200" height="220" pathLength="1" />
       <line x1="290" y1="112" x2="490" y2="112" pathLength="1" />
     </g>
+
+    <!-- highlight behind the app row being updated (animated) -->
+    <rect class="fx-row" x="302" y={rows[0]} width="176" height="25"
+      data-rows={JSON.stringify(rows.slice(0, cells.length))} />
 
     <g class="stroke content">
       {sources.map((y) => <line class="text" x1="30" y1={y + 15} x2="66" y2={y + 15} pathLength="1" />)}
@@ -56,6 +65,7 @@ const { pipeline, app, agent } = hero.drawing;
     </g>
 
     <circle class="agent" cx="200" cy="320" r="24" />
+    <circle class="fx-ring" cx="200" cy="320" r="24" />
     <g class="stroke links">
       <!-- the agent reads from the pipeline and acts in the app -->
       <line x1="185" y1="301" x2="180" y2="220" pathLength="1" />
@@ -70,12 +80,78 @@ const { pipeline, app, agent } = hero.drawing;
     <circle class="dot" cx="130" cy="180" r="2.5" />
     <circle class="dot" cx="318" cy="90" r="2.5" />
     <circle class="dot accent" cx="200" cy="320" r="3" />
+
+    <!-- packets moving through the system (animated) -->
+    {sourceRoutes.map((d) => <circle class="fx-source" r="2.5" data-route={d} />)}
+    <circle class="fx-read" r="2.5" data-route={readRoute} />
+    <circle class="fx-act" r="2.5" data-route={actRoute} />
   </svg>
 
   <span class="note note-pipeline">{pipeline}</span>
   <span class="note note-app">{app}</span>
   <span class="note note-agent">{agent}</span>
 </figure>
+
+<script>
+  import gsap from 'gsap';
+  import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+  import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
+
+  gsap.registerPlugin(MotionPathPlugin, ScrambleTextPlugin);
+
+  // Once the draw-in finishes, keep work moving through the diagram: data flows
+  // from the sources into the app, the agent reads from the pipeline and acts in
+  // the app, and the app updates one row per cycle.
+  const CYCLE = 4;
+
+  for (const drawing of document.querySelectorAll<HTMLElement>('.drawing')) {
+    const q = gsap.utils.selector(drawing);
+    const row = q('.fx-row')[0] as SVGRectElement;
+    const rowYs: number[] = JSON.parse(row.dataset.rows!);
+
+    // Show a packet, move it along its route, hide it again.
+    const travel = (el: SVGElement, duration: number) =>
+      gsap
+        .timeline()
+        .set(el, { opacity: 1 })
+        .to(el, { duration, ease: 'power1.inOut', motionPath: { path: el.dataset.route! } })
+        .set(el, { opacity: 0 });
+
+    gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
+      // Labels decode into place as they fade in with the CSS draw-in.
+      q('.note').forEach((el, i) =>
+        gsap.to(el, {
+          delay: 1.85 + i * 0.1,
+          duration: 0.8,
+          scrambleText: { text: el.textContent!, chars: 'lowerCase', speed: 0.5 },
+        })
+      );
+
+      // Starts just after the CSS draw-in (last label appears at ~2.25s).
+      const tl = gsap.timeline({ delay: 2.3, repeat: -1 });
+
+      rowYs.forEach((y, i) => {
+        const cycle = gsap.timeline();
+        q('.fx-source').forEach((el, j) => cycle.add(travel(el, 1.4), j * 0.2));
+        cycle
+          .add(travel(q('.fx-read')[0], 0.5), 1.1)
+          .fromTo(q('.fx-ring'), { scale: 1, opacity: 0.7 },
+            { scale: 1.6, opacity: 0, duration: 0.7, ease: 'power2.out', svgOrigin: '200 320', immediateRender: false }, 1.6)
+          .add(travel(q('.fx-act')[0], 0.45), 1.8)
+          .set(row, { attr: { y } }, 2.2)
+          .to(row, { opacity: 1, duration: 0.25 }, 2.25)
+          .to(row, { opacity: 0, duration: 0.5 }, 3.1);
+        tl.add(cycle, i * CYCLE);
+      });
+      tl.add(() => {}, rowYs.length * CYCLE);
+
+      // Don't spend frames on the loop while the hero is scrolled out of view.
+      const observer = new IntersectionObserver(([entry]) => tl.paused(!entry.isIntersecting));
+      observer.observe(drawing);
+      return () => observer.disconnect();
+    });
+  }
+</script>
 
 <style>
   .drawing {
@@ -164,6 +240,22 @@ const { pipeline, app, agent } = hero.drawing;
     .agent { animation-delay: 1.15s; }
     .dot { animation-delay: 1.6s; }
     .note { animation-delay: 1.85s; }
+  }
+  /* Flow animation elements stay hidden unless the script runs them. */
+  .fx-row {
+    fill: var(--wash);
+    opacity: 0;
+  }
+  .fx-ring {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.25;
+    vector-effect: non-scaling-stroke;
+    opacity: 0;
+  }
+  [data-route] {
+    fill: var(--accent);
+    opacity: 0;
   }
   @keyframes draw { to { stroke-dashoffset: 0; } }
   @keyframes appear { to { opacity: 1; } }
