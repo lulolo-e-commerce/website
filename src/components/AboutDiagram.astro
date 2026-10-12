@@ -1,0 +1,441 @@
+---
+// Small technical diagrams for the About chapters, drawn in the same style as
+// the hero. Each one draws itself in when it scrolls into view, then loops a
+// short animation of the idea it illustrates.
+interface Props {
+  kind: 'steps' | 'review' | 'path' | 'engage';
+  label: string;
+  notes: Record<string, string>;
+}
+const { kind, label, notes } = Astro.props;
+
+// steps: five stages of the work, each assisted by the agent below.
+const stageW = 56;
+const stageXs = [24, 98, 172, 246, 320];
+
+// path: scattered raw data that the pipeline cleans up.
+const raw = [[30, 86], [60, 102], [38, 126], [72, 146], [46, 168], [26, 150]];
+const bars = [[288, 26], [308, 44], [328, 20]];
+
+// engage: your team as a grid of people, two of them ours.
+const gridXs = [236, 276, 316, 356];
+const gridYs = [96, 136, 176];
+const ours = ['276,136', '316,96'];
+const peerRoutes = ['M269,136 H243', 'M323,96 H349', 'M276,143 V169', 'M316,103 V129'];
+const milestones = [36, 80, 124, 168];
+---
+
+<figure class="about-diagram" data-kind={kind} aria-label={label}>
+  <svg viewBox="0 0 400 260" aria-hidden="true">
+    {kind === 'steps' && (
+      <>
+        {stageXs.map((x) => <rect class="fx-flash" x={x} y="70" width={stageW} height="56" />)}
+        <g class="stroke frame">
+          {stageXs.map((x) => <rect x={x} y="70" width={stageW} height="56" />)}
+        </g>
+        <g class="stroke content">
+          {stageXs.map((x) => (
+            <>
+              <line class="text" x1={x + 8} y1="86" x2={x + 40} y2="86" />
+              <line class="text" x1={x + 8} y1="110" x2={x + 30} y2="110" />
+            </>
+          ))}
+          {stageXs.slice(1).map((x) => (
+            <>
+              <line class="flow" x1={x - 18} y1="98" x2={x} y2="98" />
+              <polyline class="flow" points={`${x - 6},92 ${x},98 ${x - 6},104`} />
+            </>
+          ))}
+        </g>
+        <circle class="agent solid" cx="200" cy="200" r="20" />
+        <circle class="fx-ring" cx="200" cy="200" r="20" />
+        <g class="stroke links">
+          {stageXs.map((x) => <line x1="200" y1="180" x2={x + stageW / 2} y2="126" />)}
+        </g>
+        <g class="stroke leaders">
+          <polyline class="accent" points="214,214 236,236 246,236" />
+        </g>
+        <circle class="dot accent solid" cx="200" cy="200" r="3" />
+        {stageXs.map((x) => <circle class="fx-assist" r="2.5" data-route={`M200,180 L${x + stageW / 2},126`} />)}
+        <circle class="fx-main" r="2.5" data-route="M24,98 H376" />
+      </>
+    )}
+
+    {kind === 'review' && (
+      <>
+        <rect class="fx-flash" x="300" y="110" width="60" height="40" />
+        <g class="stroke frame">
+          <rect x="300" y="110" width="60" height="40" />
+          <circle cx="220" cy="62" r="9" />
+          <path d="M204,92 C204,76 236,76 236,92" />
+          <line x1="220" y1="100" x2="220" y2="160" />
+        </g>
+        <g class="stroke content">
+          <line class="text" x1="310" y1="124" x2="342" y2="124" />
+          <line class="text" x1="310" y1="136" x2="334" y2="136" />
+          <line class="flow" x1="80" y1="130" x2="300" y2="130" />
+          <polyline class="flow" points="293,124 300,130 293,136" />
+          <path class="flow" d="M220,160 V196 H60 V151" />
+          <polyline class="flow" points="54,158 60,151 66,158" />
+        </g>
+        <circle class="agent solid" cx="60" cy="130" r="20" />
+        <circle class="fx-ring" cx="60" cy="130" r="20" />
+        <g class="stroke leaders">
+          <polyline class="accent" points="60,110 60,64 68,64" />
+          <polyline points="330,150 330,178 338,178" />
+        </g>
+        <circle class="dot accent solid" cx="60" cy="130" r="3" />
+        <circle class="dot solid" cx="330" cy="150" r="2.5" />
+        <polyline class="fx-check" points="230,116 236,122 247,109" />
+        <path class="fx-cross" d="M231,109 L245,123 M245,109 L231,123" />
+        <circle class="fx-item" r="2.5" />
+        <circle class="fx-item" r="2.5" />
+        <circle class="fx-item" r="2.5" />
+      </>
+    )}
+
+    {kind === 'path' && (
+      <>
+        <g class="stroke frame">
+          <polyline points="92,70 140,112 140,148 92,190" />
+          <rect x="270" y="70" width="110" height="120" />
+          <line x1="270" y1="88" x2="380" y2="88" />
+        </g>
+        <g class="stroke content">
+          <line class="flow" x1="140" y1="130" x2="190" y2="130" />
+          <polyline class="flow" points="183,124 190,130 183,136" />
+          <line class="flow" x1="230" y1="130" x2="270" y2="130" />
+          <polyline class="flow" points="263,124 270,130 263,136" />
+          <line class="header" x1="282" y1="176" x2="368" y2="176" />
+          <path class="flow" d="M325,190 V214 H210 V151" />
+          <polyline class="flow" points="204,158 210,151 216,158" />
+        </g>
+        {raw.map(([x, y]) => <circle class="raw solid" cx={x} cy={y} r="2.5" />)}
+        {bars.map(([x, h]) => <rect class="bar solid" x={x} y={176 - h} width="12" height={h} />)}
+        <rect class="fx-bar solid" x="348" y="140" width="12" height="36" />
+        <circle class="agent solid" cx="210" cy="130" r="20" />
+        <circle class="fx-ring" cx="210" cy="130" r="20" />
+        <g class="stroke leaders">
+          <polyline class="accent" points="210,110 210,54 218,54" />
+        </g>
+        <circle class="dot accent solid" cx="210" cy="130" r="3" />
+        {raw.map(([x, y]) => <circle class="fx-raw" r="2.5" data-route={`M${x},${y} L140,130 H190`} />)}
+        <circle class="fx-out" r="2.5" data-route="M230,130 H270" />
+        <circle class="fx-steer" r="2.5" data-route="M325,190 V214 H210 V151" />
+      </>
+    )}
+
+    {kind === 'engage' && (
+      <>
+        <g class="stroke frame">
+          <rect class="boundary" x="16" y="64" width="168" height="136" />
+          <rect class="boundary" x="216" y="64" width="168" height="136" />
+          <rect x="32" y="80" width="56" height="48" />
+          {gridXs.flatMap((x) => gridYs.map((y) => (
+            ours.includes(`${x},${y}`) ? null : <circle cx={x} cy={y} r="7" />
+          )))}
+        </g>
+        <g class="stroke content">
+          <line class="text" x1="42" y1="94" x2="78" y2="94" />
+          <line class="text" x1="42" y1="104" x2="70" y2="104" />
+          <line class="text" x1="42" y1="114" x2="74" y2="114" />
+          <line class="text" x1="108" y1="88" x2="138" y2="88" />
+          <line class="text" x1="124" y1="104" x2="154" y2="104" />
+          <line class="text" x1="140" y1="120" x2="168" y2="120" />
+          <line class="header" x1="36" y1="172" x2="168" y2="172" />
+          <polyline class="header" points="168,172 168,134 180,139 168,144" />
+          {gridXs.slice(1).flatMap((x) => gridYs.map((y) => (
+            <line x1={x - 33} y1={y} x2={x - 7} y2={y} />
+          )))}
+          {gridYs.slice(1).flatMap((y) => gridXs.map((x) => (
+            <line x1={x} y1={y - 33} x2={x} y2={y - 7} />
+          )))}
+        </g>
+        {milestones.map((x) => <circle class="milestone solid" cx={x} cy="172" r="4" />)}
+        {milestones.map((x) => <circle class="fx-milestone" cx={x} cy="172" r="4" />)}
+        {ours.map((p) => {
+          const [cx, cy] = p.split(',');
+          return (
+            <>
+              <circle class="agent solid" cx={cx} cy={cy} r="7" />
+              <circle class="fx-ring" cx={cx} cy={cy} r="7" />
+            </>
+          );
+        })}
+        <circle class="fx-main" r="2.5" data-route="M36,172 H168" />
+        {peerRoutes.map((d) => <circle class="fx-peer" r="2.5" data-route={d} />)}
+      </>
+    )}
+  </svg>
+
+  {Object.entries(notes).map(([key, text]) => (
+    <span class={`note note-${kind}-${key}`}>{text}</span>
+  ))}
+</figure>
+
+<script>
+  import gsap from 'gsap';
+  import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
+  import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+  import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(DrawSVGPlugin, MotionPathPlugin, ScrambleTextPlugin, ScrollTrigger);
+
+  type Q = (selector: string) => Element[];
+
+  // Show a packet, move it along a route, hide it again.
+  const travel = (el: Element, duration: number, ease = 'power1.inOut') =>
+    gsap
+      .timeline()
+      .set(el, { opacity: 1 })
+      .to(el, { duration, ease, motionPath: { path: (el as SVGElement).dataset.route! } })
+      .set(el, { opacity: 0 });
+
+  const pulse = (ring: Element) =>
+    gsap.fromTo(ring, { scale: 1, opacity: 0.7 },
+      { scale: 1.6, opacity: 0, duration: 0.7, ease: 'power2.out', transformOrigin: '50% 50%', immediateRender: false });
+
+  const flash = (el: Element, hold = 0.3) =>
+    gsap.timeline().to(el, { opacity: 1, duration: 0.2 }).to(el, { opacity: 0, duration: 0.5 }, `+=${hold}`);
+
+  // One looping timeline per diagram, built paused.
+  const loops: Record<string, (q: Q) => gsap.core.Timeline> = {
+    // A piece of work crosses the five stages; the agent assists as it reaches each one.
+    steps(q) {
+      const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.6, paused: true });
+      const ring = q('.fx-ring')[0];
+      const start = 0.5, duration = 3.2;
+      tl.add(travel(q('.fx-main')[0], duration, 'none'), start);
+      q('.fx-assist').forEach((el, i) => {
+        // When the packet reaches the middle of stage i.
+        const at = start + ((28 + 74 * i) / 352) * duration;
+        tl.add(pulse(ring), at - 0.45).add(travel(el, 0.35), at - 0.35).add(flash(q('.fx-flash')[i]), at);
+      });
+      return tl;
+    },
+
+    // Drafts leave the agent and stop at the reviewer: two ship, one goes back.
+    review(q) {
+      const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.4, paused: true });
+      const ring = q('.fx-ring')[0];
+      const outcomes = [true, false, true];
+      q('.fx-item').forEach((el, i) => {
+        const pass = outcomes[i];
+        const item = gsap
+          .timeline()
+          .add(pulse(ring))
+          .set(el, { opacity: 1 })
+          .to(el, { duration: 0.8, ease: 'power1.inOut', motionPath: { path: 'M80,130 H220' } })
+          .add(flash(q(pass ? '.fx-check' : '.fx-cross')[0], 0.4))
+          .to(el, pass
+            ? { duration: 0.6, ease: 'power1.inOut', motionPath: { path: 'M220,130 H318' } }
+            : { duration: 1.3, ease: 'power1.inOut', motionPath: { path: 'M220,130 V196 H60 V151' } }, '+=0.35')
+          .set(el, { opacity: 0 });
+        if (pass) item.add(flash(q('.fx-flash')[0], 0.2), '-=0.05');
+        tl.add(item, i * 1.7);
+      });
+      return tl;
+    },
+
+    // Raw data funnels into the agent, its output updates the app, and people
+    // steer the agent from the app.
+    path(q) {
+      const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.5, paused: true });
+      const ring = q('.fx-ring')[0];
+      q('.fx-raw').forEach((el, i) => tl.add(travel(el, 1), i * 0.12));
+      tl.add(pulse(ring), 1.6)
+        .add(travel(q('.fx-out')[0], 0.4), 1.75)
+        // Grow from the baseline (y + height = 176).
+        .fromTo(q('.fx-bar'), { attr: { y: 163, height: 13 } },
+          { attr: { y: 140, height: 36 }, duration: 0.6, ease: 'back.out(2)', immediateRender: false }, 2.1)
+        .add(travel(q('.fx-steer')[0], 1.1), 2.7)
+        .add(pulse(ring), 3.75);
+      return tl;
+    },
+
+    // The project reaches each milestone in turn while our engineers trade work
+    // with the people around them.
+    engage(q) {
+      const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.6, paused: true });
+      const duration = 2.7;
+      tl.add(travel(q('.fx-main')[0], duration), 0);
+      q('.fx-milestone').forEach((el, i, all) =>
+        tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, (i / (all.length - 1)) * duration));
+      tl.to(q('.fx-milestone'), { opacity: 0, duration: 0.4 }, duration + 0.3);
+      const rings = q('.fx-ring');
+      q('.fx-peer').forEach((el, i) =>
+        tl.add(pulse(rings[i % 2]), 0.2 + i * 0.7).add(travel(el, 0.5), 0.3 + i * 0.7));
+      return tl;
+    },
+  };
+
+  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
+    for (const figure of document.querySelectorAll<HTMLElement>('.about-diagram')) {
+      const q = gsap.utils.selector(figure);
+      const notes = q('.note');
+      const loop = loops[figure.dataset.kind!](q);
+
+      // Hidden until the diagram scrolls into view, then drawn like the hero:
+      // structure, contents, the agent, its links and finally the labels.
+      gsap.set(q('.stroke > *'), { drawSVG: '0%' });
+      gsap.set([...q('.solid'), ...notes], { opacity: 0 });
+      const draw = (duration: number) =>
+        ({ drawSVG: '100%', duration, ease: 'power2.inOut', stagger: { amount: 0.25 } });
+      const intro = gsap
+        .timeline({ paused: true, onComplete: () => trigger.isActive && loop.play() })
+        .to(q('.frame > *'), draw(0.8))
+        .to(q('.content > *'), draw(0.6), '-=0.35')
+        .to(q('.solid'), { opacity: 1, duration: 0.4, ease: 'power1.out' }, '-=0.2')
+        .to(q('.links > *'), draw(0.4), '-=0.1')
+        .to(q('.leaders > *'), draw(0.4), '-=0.1');
+      notes.forEach((el, i) =>
+        intro
+          .set(el, { opacity: 1 }, `<${i ? 0.1 : 0.2}`)
+          .to(el, { duration: 0.8, scrambleText: { text: el.textContent!, chars: 'lowerCase', speed: 0.5 } }, '<'));
+
+      // Draw in once; after that, only run the loop while the diagram is on screen.
+      const trigger = ScrollTrigger.create({
+        trigger: figure,
+        start: 'top 80%',
+        end: 'bottom top',
+        onToggle: (self) => {
+          if (self.isActive) intro.play();
+          if (intro.progress() === 1) loop.paused(!self.isActive);
+        },
+      });
+    }
+  });
+</script>
+
+<style>
+  .about-diagram {
+    position: relative;
+    margin: 0;
+    aspect-ratio: 400 / 260;
+    width: 100%;
+  }
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .stroke :global(*) {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.25;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: square;
+  }
+  .frame .boundary {
+    stroke: var(--rule);
+  }
+  .content :global(*) {
+    stroke: var(--rule);
+  }
+  .content .text {
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+  .content .header,
+  .content .flow {
+    stroke: var(--lead);
+  }
+  .links :global(*) {
+    stroke: var(--accent);
+  }
+  .leaders :global(*) {
+    stroke: var(--lead);
+    stroke-width: 1;
+  }
+  .leaders .accent {
+    stroke: var(--accent);
+  }
+  .agent {
+    fill: var(--wash);
+    stroke: var(--accent);
+    stroke-width: 1.25;
+    vector-effect: non-scaling-stroke;
+  }
+  .dot,
+  .raw {
+    fill: var(--lead);
+  }
+  .dot.accent {
+    fill: var(--accent);
+  }
+  .bar {
+    fill: var(--rule);
+  }
+  .fx-bar {
+    fill: var(--accent);
+  }
+  .milestone {
+    fill: var(--paper);
+    stroke: var(--lead);
+    stroke-width: 1.25;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .note {
+    position: absolute;
+    transform: translateY(-50%);
+    padding-left: 0.35em;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  /* Positions are the label anchor points in SVG units, as % of 400 × 260. */
+  .note-steps-code { left: 6%; top: 20.8%; }
+  .note-steps-review { left: 24.5%; top: 20.8%; }
+  .note-steps-tests { left: 43%; top: 20.8%; }
+  .note-steps-docs { left: 61.5%; top: 20.8%; }
+  .note-steps-deploy { left: 80%; top: 20.8%; }
+  .note-steps-agent { left: 61.5%; top: 90.8%; color: var(--accent); }
+  .note-review-agent { left: 17%; top: 24.6%; color: var(--accent); }
+  .note-review-person { left: 62%; top: 23.8%; }
+  .note-review-ship { left: 84.5%; top: 68.5%; }
+  .note-review-back { left: 22%; top: 83%; color: var(--lead); }
+  .note-path-pipeline { left: 23%; top: 20.8%; }
+  .note-path-agent { left: 54.5%; top: 20.8%; color: var(--accent); }
+  .note-path-app { left: 68.5%; top: 30.4%; }
+  .note-path-steer { left: 56%; top: 88.5%; color: var(--lead); }
+  .note-engage-scope { left: 3%; top: 17%; }
+  .note-engage-embedded { left: 53%; top: 17%; }
+
+  /* Animation elements stay hidden unless the script runs them. */
+  .fx-flash {
+    fill: var(--wash);
+    opacity: 0;
+  }
+  .fx-ring {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.25;
+    vector-effect: non-scaling-stroke;
+    opacity: 0;
+  }
+  .fx-check,
+  .fx-cross {
+    fill: none;
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    opacity: 0;
+  }
+  .fx-check { stroke: var(--accent); }
+  .fx-cross { stroke: var(--lead); }
+  .fx-milestone,
+  [data-route],
+  .fx-item {
+    fill: var(--accent);
+    opacity: 0;
+  }
+
+  @media (max-width: 30rem) {
+    .note { font-size: 0.6875rem; }
+  }
+</style>

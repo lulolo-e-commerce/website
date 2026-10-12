@@ -33,14 +33,37 @@ export const hero = {
 
 export const about = {
   heading: 'We build with AI every day.',
-  body: [
-    'AI is part of how we work, from writing and reviewing code to testing and documentation. That experience goes into your project: we know where AI saves time and where it needs a person to check the result.',
-    'Most projects use all three of our specialities. Data has to be collected and cleaned before an agent can use it, and people need a web app to see and steer the results. We build the whole path, so nothing gets lost between teams.',
-  ],
-  // TODO: add facts such as founding year, location or team size.
-  facts: [
-    { term: 'Specialities', detail: 'Web applications, data pipelines, AI agents' },
-    { term: 'Ways to work', detail: 'Fixed-scope projects, or engineers embedded in your team' },
+  // One chapter per idea. Each has its own animated diagram; `diagram` picks
+  // which one and `notes` are the labels drawn on it.
+  chapters: [
+    {
+      title: 'AI in every step of the work',
+      body: 'AI is part of how we work, from writing and reviewing code to testing, documentation and deployment. It is in the daily routine of every engineer, not a side experiment, and it is how a small team delivers the scope of a much larger one.',
+      diagram: 'steps',
+      label: 'Diagram: work moves through code, review, tests, docs and deploy, with an AI agent assisting at every step.',
+      notes: { code: 'code', review: 'review', tests: 'tests', docs: 'docs', deploy: 'deploy', agent: 'AI assists' },
+    },
+    {
+      title: 'A person checks the result',
+      body: 'Using AI every day has taught us where it saves time and where it needs a person to check the result. That review step comes with us into your project: AI drafts and suggests, an engineer decides what ships, and anything not good enough goes back with notes.',
+      diagram: 'review',
+      label: 'Diagram: AI drafts pass an engineer, who ships the good ones and sends the rest back.',
+      notes: { agent: 'AI drafts', person: 'engineer reviews', ship: 'ships', back: 'sent back with notes' },
+    },
+    {
+      title: 'One team for the whole path',
+      body: 'Most projects use all three of our specialities. Data has to be collected and cleaned before an agent can use it, and people need a web app to see and steer the results. We build the whole path, so nothing gets lost between teams.',
+      diagram: 'path',
+      label: 'Diagram: raw data is cleaned by a pipeline, used by an AI agent and shown in a web app, where people steer the agent.',
+      notes: { pipeline: 'Data pipeline', agent: 'AI agent', app: 'Web app', steer: 'people steer' },
+    },
+    {
+      title: 'Two ways to work',
+      body: 'Choose a fixed-scope project, where we agree the outcome up front and deliver it end to end through clear milestones. Or embed our engineers in your team, working in your repositories and processes alongside your own developers.',
+      diagram: 'engage',
+      label: 'Diagram: a fixed-scope project moving through milestones, and our engineers working inside your team.',
+      notes: { scope: 'Fixed scope', embedded: 'Embedded in your team' },
+    },
   ],
 };
 
