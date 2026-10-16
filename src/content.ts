@@ -1,5 +1,6 @@
 // All site copy lives here.
-// TODO: point callUrl at a booking page (e.g. Calendly or Cal.com) if you have one.
+// TODO: point callUrl at a booking page (e.g. Calendly or Cal.com) if you have one,
+// and change contact.secondary back to something like 'Book a 30-minute call'.
 
 export const site = {
   name: 'LULOLO',
@@ -13,8 +14,8 @@ export const site = {
 };
 
 export const hero = {
-  headline: 'A small team, multiplied by AI. Enterprise-grade results.',
-  cta: 'Talk to us now!',
+  headline: 'Production-grade software, delivered fast. A small team, multiplied by AI.',
+  cta: 'Tell us what you’re building',
   // Intro under the headline: "We design and build {services}. Built in {languages}."
   // Services and languages are highlighted on the page.
   lede: {
@@ -96,7 +97,7 @@ export const contact = {
   heading: 'Tell us what you want to build.',
   body:
     'A few lines about the problem, your data and the systems involved is enough. We’ll reply to arrange a call and tell you honestly whether we’re a good fit.',
-  secondary: 'Book a 30-minute call',
+  secondary: 'Ask for a 30-minute call by email',
   form: {
     // Paste a form service URL here (e.g. https://formspree.io/f/xxxxxxx) to
     // receive submissions. While it's empty, sending opens the visitor's email
