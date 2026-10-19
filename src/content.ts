@@ -14,13 +14,16 @@ export const site = {
 };
 
 export const hero = {
-  headline: 'Production-grade software, delivered fast. A small team, multiplied by AI.',
+  eyebrow: 'IT consultancy, built around AI',
+  headline: 'Software, multiplied by AI.',
   cta: 'Tell us what you’re building',
-  // Intro under the headline: "We design and build {services}. Built in {languages}."
+  more: 'See what we build',
+  // Intro under the headline: "{lead} {services}, {after}. {languagesLead} {languages}."
   // Services and languages are highlighted on the page.
   lede: {
-    lead: 'We design and build',
+    lead: 'Production-grade',
     services: ['web applications', 'data pipelines', 'AI agents'],
+    after: 'delivered fast by a small team',
     languagesLead: 'Built in',
     languages: ['Rust', 'Scala', 'Java'],
   },
@@ -33,6 +36,7 @@ export const hero = {
 };
 
 export const about = {
+  eyebrow: 'How we work',
   heading: 'We build with AI every day.',
   // One chapter per idea. Each has its own animated diagram; `diagram` picks
   // which one and `notes` are the labels drawn on it.
@@ -69,23 +73,28 @@ export const about = {
 };
 
 export const services = {
+  eyebrow: 'Services',
   heading: 'What we build',
-  columns: ['Service', 'What it covers', 'You end up with'],
+  outcomeLabel: 'You end up with',
+  // `icon` picks the line drawing on each tile: app, pipeline or agent.
   items: [
     {
       name: 'Web application development',
+      icon: 'app',
       detail:
         'Customer portals, internal tools and SaaS products, from first design through to production.',
       outcome: 'A tested, deployed app your team can run and extend',
     },
     {
       name: 'Data pipeline development',
+      icon: 'pipeline',
       detail:
         'Pipelines that collect, clean and move data between your systems, on a schedule or in real time.',
       outcome: 'Data you can trust, with monitoring when something breaks',
     },
     {
       name: 'AI agent development',
+      icon: 'agent',
       detail:
         'Agents that read documents, use your tools and complete multi-step tasks, with guardrails and human review where it matters.',
       outcome: 'An agent in production, measured against real tasks',
@@ -94,6 +103,7 @@ export const services = {
 };
 
 export const contact = {
+  eyebrow: 'Contact',
   heading: 'Tell us what you want to build.',
   body:
     'A few lines about the problem, your data and the systems involved is enough. We’ll reply to arrange a call and tell you honestly whether we’re a good fit.',

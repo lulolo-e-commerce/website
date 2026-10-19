@@ -148,7 +148,6 @@ const action = form.endpoint || `mailto:${site.email}`;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.5rem 1.25rem;
-    margin-top: 2.25rem;
   }
   .field {
     display: grid;
@@ -183,8 +182,10 @@ const action = form.endpoint || `mailto:${site.email}`;
     color: var(--ink);
     background: var(--field);
     border: 1px solid var(--rule);
-    border-radius: 3px;
-    padding: 0.65rem 0.8rem;
+    border-radius: 0.75rem;
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
   }
   textarea {
     resize: vertical;
@@ -199,10 +200,12 @@ const action = form.endpoint || `mailto:${site.email}`;
   textarea:focus {
     border-color: var(--accent);
   }
+  /* A soft ring instead of an outline; the transparent outline still shows in
+     forced-colors mode, where box-shadow is dropped. */
   input:focus-visible,
   textarea:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 0;
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent);
   }
   [aria-invalid] {
     border-color: var(--danger);
@@ -230,8 +233,7 @@ const action = form.endpoint || `mailto:${site.email}`;
   button.button {
     border: 0;
     font: inherit;
-    font-size: var(--step-0);
-    font-weight: 500;
+    font-size: var(--step-1);
     cursor: pointer;
   }
   button.button:disabled {
