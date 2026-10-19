@@ -25,15 +25,25 @@ const { pipeline, app, agent } = hero.drawing;
 
 <figure class="drawing" aria-label="Diagram: data sources feed a data pipeline, which feeds a web application. An AI agent works across both.">
   <svg viewBox="0 0 520 420" aria-hidden="true">
+    <defs>
+      <linearGradient id="hero-orb" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#40a9ff" />
+        <stop offset="1" stop-color="#5e5ce6" />
+      </linearGradient>
+      <radialGradient id="hero-glow">
+        <stop offset="0" stop-color="#0071e3" stop-opacity="0.3" />
+        <stop offset="1" stop-color="#0071e3" stop-opacity="0" />
+      </radialGradient>
+    </defs>
     <g class="stroke frame">
       <!-- data sources -->
-      {sources.map((y) => <rect x="20" y={y} width="64" height="30" pathLength="1" />)}
+      {sources.map((y) => <rect x="20" y={y} width="64" height="30" rx="6" pathLength="1" />)}
       <!-- pipeline with three stages -->
-      <rect x="110" y="180" width="140" height="40" pathLength="1" />
+      <rect x="110" y="180" width="140" height="40" rx="8" pathLength="1" />
       <line x1="157" y1="180" x2="157" y2="220" pathLength="1" />
       <line x1="203" y1="180" x2="203" y2="220" pathLength="1" />
       <!-- web app window -->
-      <rect x="290" y="90" width="200" height="220" pathLength="1" />
+      <rect x="290" y="90" width="200" height="220" rx="10" pathLength="1" />
       <line x1="290" y1="112" x2="490" y2="112" pathLength="1" />
     </g>
 
@@ -64,7 +74,8 @@ const { pipeline, app, agent } = hero.drawing;
       )}
     </g>
 
-    <circle class="agent" cx="200" cy="320" r="24" />
+    <circle class="agent-halo" cx="200" cy="320" r="56" fill="url(#hero-glow)" />
+    <circle class="agent" cx="200" cy="320" r="24" fill="url(#hero-orb)" />
     <circle class="fx-ring" cx="200" cy="320" r="24" />
     <g class="stroke links">
       <!-- the agent reads from the pipeline and acts in the app -->
@@ -172,7 +183,16 @@ const { pipeline, app, agent } = hero.drawing;
     stroke: var(--ink);
     stroke-width: 1.25;
     vector-effect: non-scaling-stroke;
-    stroke-linecap: square;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  /* Boxes are white cards with a soft shadow on the grey canvas. */
+  .frame :global(*) {
+    stroke: var(--frame);
+  }
+  .frame rect {
+    fill: var(--tile);
+    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.04)) drop-shadow(0 6px 14px rgb(0 0 0 / 0.06));
   }
   .content :global(*) {
     stroke: var(--rule);
@@ -188,12 +208,6 @@ const { pipeline, app, agent } = hero.drawing;
   .links :global(*) {
     stroke: var(--accent);
   }
-  .agent {
-    fill: var(--wash);
-    stroke: var(--accent);
-    stroke-width: 1.25;
-    vector-effect: non-scaling-stroke;
-  }
   .leaders :global(*) {
     stroke: var(--lead);
     stroke-width: 1;
@@ -204,19 +218,24 @@ const { pipeline, app, agent } = hero.drawing;
   .dot {
     fill: var(--lead);
   }
+  /* The centre of the agent orb. */
   .dot.accent {
-    fill: var(--accent);
+    fill: #ffffff;
   }
 
+  /* Labels are small pills at the end of their leader lines. */
   .note {
     position: absolute;
     transform: translateY(-50%);
-    padding-left: 0.35em;
+    padding: 0.3em 0.75em;
     font-family: var(--font-mono);
     font-size: 0.75rem;
     line-height: 1.3;
     color: var(--ink);
     white-space: nowrap;
+    background: var(--tile);
+    border-radius: 999px;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.06);
   }
   .note-pipeline { left: 26.5%; top: 13.8%; }
   .note-app { left: 62.7%; top: 9.5%; }
@@ -233,11 +252,16 @@ const { pipeline, app, agent } = hero.drawing;
     .content :global(*) { animation-delay: 0.6s; animation-duration: 0.6s; }
     .links :global(*) { animation-delay: 1.35s; animation-duration: 0.4s; }
     .leaders :global(*) { animation-delay: 1.6s; animation-duration: 0.4s; }
-    .agent, .dot, .note {
+    .frame rect {
+      fill-opacity: 0;
+      animation: draw 0.8s cubic-bezier(0.6, 0, 0.2, 1) forwards, fill-in 0.6s ease-out forwards;
+      animation-delay: 0.1s, 0.4s;
+    }
+    .agent, .agent-halo, .dot, .note {
       opacity: 0;
       animation: appear 0.4s ease-out forwards;
     }
-    .agent { animation-delay: 1.15s; }
+    .agent, .agent-halo { animation-delay: 1.15s; }
     .dot { animation-delay: 1.6s; }
     .note { animation-delay: 1.85s; }
   }
@@ -257,8 +281,14 @@ const { pipeline, app, agent } = hero.drawing;
     fill: var(--accent);
     opacity: 0;
   }
-  @keyframes draw { to { stroke-dashoffset: 0; } }
   @keyframes appear { to { opacity: 1; } }
+  @keyframes fill-in { to { fill-opacity: 1; } }
+  /* Chrome cuts the end off dashed non-scaling strokes, so the dash is dropped
+     once each stroke is drawn. */
+  @keyframes draw {
+    99% { stroke-dashoffset: 0; }
+    to { stroke-dashoffset: 0; stroke-dasharray: none; }
+  }
 
   @media (max-width: 30rem) {
     .note { font-size: 0.6875rem; }
