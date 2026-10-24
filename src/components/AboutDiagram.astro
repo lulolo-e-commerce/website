@@ -3,7 +3,7 @@
 // the hero. Each one draws itself in when it scrolls into view, then loops a
 // short animation of the idea it illustrates.
 interface Props {
-  kind: 'steps' | 'review' | 'path' | 'engage';
+  kind: 'points' | 'steps' | 'review' | 'path';
   label: string;
   notes: Record<string, string>;
 }
@@ -23,12 +23,9 @@ const stageXs = [24, 98, 172, 246, 320];
 const raw = [[30, 86], [60, 102], [38, 126], [72, 146], [46, 168], [26, 150]];
 const bars = [[288, 26], [308, 44], [328, 20]];
 
-// engage: your team as a grid of people, two of them ours.
-const gridXs = [236, 276, 316, 356];
-const gridYs = [96, 136, 176];
-const ours = ['276,136', '316,96'];
-const peerRoutes = ['M269,136 H243', 'M323,96 H349', 'M276,143 V169', 'M316,103 V129'];
-const milestones = [36, 80, 124, 168];
+// points: the coins on the point card, and the three slots of the server.
+const coins = [44, 58, 72, 86];
+const slotYs = [80, 113, 146];
 ---
 
 <figure class="about-diagram" data-kind={kind} aria-label={label}>
@@ -145,45 +142,38 @@ const milestones = [36, 80, 124, 168];
       </>
     )}
 
-    {kind === 'engage' && (
+    {kind === 'points' && (
       <>
         <g class="stroke frame">
-          <rect class="boundary" x="16" y="64" width="168" height="136" rx="14" />
-          <rect class="boundary" x="216" y="64" width="168" height="136" rx="14" />
-          <rect x="32" y="80" width="56" height="48" rx="6" />
-          {gridXs.flatMap((x) => gridYs.map((y) => (
-            ours.includes(`${x},${y}`) ? null : <circle cx={x} cy={y} r="7" />
-          )))}
+          <rect x="24" y="96" width="88" height="56" rx="8" />
+          <circle cx="200" cy="104" r="10" />
+          <path d="M180,142 C180,120 220,120 220,142" />
+          <rect x="288" y="80" width="88" height="100" rx="8" />
+          {slotYs.slice(1).map((y) => <line x1="288" y1={y} x2="376" y2={y} />)}
         </g>
+        <rect class="fx-flash" x="289" y="114" width="86" height="31" />
         <g class="stroke content">
-          <line class="text" x1="42" y1="94" x2="78" y2="94" />
-          <line class="text" x1="42" y1="104" x2="70" y2="104" />
-          <line class="text" x1="42" y1="114" x2="74" y2="114" />
-          <line class="text" x1="108" y1="88" x2="138" y2="88" />
-          <line class="text" x1="124" y1="104" x2="154" y2="104" />
-          <line class="text" x1="140" y1="120" x2="168" y2="120" />
-          <line class="header" x1="36" y1="172" x2="168" y2="172" />
-          <polyline class="header" points="168,172 168,134 180,139 168,144" />
-          {gridXs.slice(1).flatMap((x) => gridYs.map((y) => (
-            <line x1={x - 33} y1={y} x2={x - 7} y2={y} />
-          )))}
-          {gridYs.slice(1).flatMap((y) => gridXs.map((x) => (
-            <line x1={x} y1={y - 33} x2={x} y2={y - 7} />
-          )))}
+          <line class="text" x1="36" y1="112" x2="76" y2="112" />
+          {slotYs.map((y) => <line class="text" x1="300" y1={y + 16.5} x2="336" y2={y + 16.5} />)}
+          <line class="flow" x1="112" y1="124" x2="174" y2="124" />
+          <polyline class="flow" points="167,118 174,124 167,130" />
+          <line class="flow" x1="226" y1="124" x2="288" y2="124" />
+          <polyline class="flow" points="281,118 288,124 281,130" />
+          <path class="flow" d="M200,148 V196 H68 V154" />
+          <polyline class="flow" points="62,161 68,154 74,161" />
         </g>
-        {milestones.map((x) => <circle class="milestone solid" cx={x} cy="172" r="4" />)}
-        {milestones.map((x) => <circle class="fx-milestone" cx={x} cy="172" r="4" />)}
-        {ours.map((p) => {
-          const [cx, cy] = p.split(',');
-          return (
-            <>
-              <circle class="agent solid" cx={cx} cy={cy} r="7" fill={orb} />
-              <circle class="fx-ring" cx={cx} cy={cy} r="7" />
-            </>
-          );
-        })}
-        <circle class="fx-main" r="2.5" data-route="M36,172 H168" />
-        {peerRoutes.map((d) => <circle class="fx-peer" r="2.5" data-route={d} />)}
+        {coins.map((x) => <circle class="coin solid" cx={x} cy="136" r="4" fill={orb} />)}
+        {slotYs.map((y) => <circle class="dot solid" cx="362" cy={y + 16.5} r="2.5" />)}
+        <circle class="fx-led" cx="362" cy="129.5" r="2.5" />
+        <circle class="fx-ring" cx="200" cy="104" r="10" />
+        <g class="stroke leaders">
+          <polyline points="200,94 200,60 208,60" />
+          <polyline points="332,180 332,224 324,224" />
+        </g>
+        {coins.map((x) => <circle class="fx-coin" r="2.5" data-route={`M${x},136 L112,124 H174`} />)}
+        <circle class="fx-talk" r="2.5" data-route="M200,148 V196 H68 V154" />
+        <circle class="fx-talk" r="2.5" data-route="M68,154 V196 H200 V148" />
+        <circle class="fx-out" r="2.5" data-route="M226,124 H288" />
       </>
     )}
   </svg>
@@ -275,18 +265,22 @@ const milestones = [36, 80, 124, 168];
       return tl;
     },
 
-    // The project reaches each milestone in turn while our engineers trade work
-    // with the people around them.
-    engage(q) {
+    // Points leave the card for the engineer, who talks it through with you and
+    // then delivers the work to your server. The card refills for the next loop.
+    points(q) {
       const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.6, paused: true });
-      const duration = 2.7;
-      tl.add(travel(q('.fx-main')[0], duration), 0);
-      q('.fx-milestone').forEach((el, i, all) =>
-        tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.2, immediateRender: false }, (i / (all.length - 1)) * duration));
-      tl.to(q('.fx-milestone'), { opacity: 0, duration: 0.4 }, duration + 0.3);
-      const rings = q('.fx-ring');
-      q('.fx-peer').forEach((el, i) =>
-        tl.add(pulse(rings[i % 2]), 0.2 + i * 0.7).add(travel(el, 0.5), 0.3 + i * 0.7));
+      const ring = q('.fx-ring')[0];
+      const coins = q('.coin');
+      q('.fx-coin').forEach((el, i) =>
+        tl.to(coins[i], { opacity: 0.25, duration: 0.2 }, i * 0.25).add(travel(el, 0.7), i * 0.25));
+      tl.add(pulse(ring), 1.5);
+      const [ask, answer] = q('.fx-talk');
+      tl.add(travel(ask, 1.1), 1.7).add(travel(answer, 1.1), 2.9).add(pulse(ring), 4);
+      tl.add(travel(q('.fx-out')[0], 0.5), 4.2)
+        .add(flash(q('.fx-flash')[0], 0.6), 4.7)
+        .to(q('.fx-led'), { opacity: 1, duration: 0.2 }, 4.7)
+        .to(q('.fx-led'), { opacity: 0, duration: 0.5 }, 5.7)
+        .to(coins, { opacity: 1, duration: 0.5, stagger: 0.08 }, 5.9);
       return tl;
     },
   };
@@ -435,12 +429,6 @@ const milestones = [36, 80, 124, 168];
   .bar {
     fill: var(--rule);
   }
-  .milestone {
-    fill: var(--tile);
-    stroke: var(--lead);
-    stroke-width: 1.25;
-    vector-effect: non-scaling-stroke;
-  }
 
   .note {
     position: absolute;
@@ -470,8 +458,11 @@ const milestones = [36, 80, 124, 168];
   .note-path-agent { left: 54.5%; top: 20.8%; color: var(--accent); }
   .note-path-app { left: 68.5%; top: 30.4%; }
   .note-path-steer { left: 56%; top: 88.5%; color: var(--lead); }
-  .note-engage-scope { left: 3%; top: 17%; }
-  .note-engage-embedded { left: 53%; top: 17%; }
+  .note-points-card { left: 6%; top: 29%; }
+  .note-points-person { left: 52%; top: 23.1%; }
+  .note-points-talk { left: 22%; top: 75.4%; color: var(--lead); }
+  /* Anchored by its right edge, at the end of a leader that points left. */
+  .note-points-server { right: 19%; top: 86.2%; }
 
   /* Animation elements stay hidden unless the script runs them. */
   .fx-flash {
@@ -494,7 +485,7 @@ const milestones = [36, 80, 124, 168];
   }
   .fx-check { stroke: var(--accent); }
   .fx-cross { stroke: var(--lead); }
-  .fx-milestone,
+  .fx-led,
   [data-route],
   .fx-item {
     fill: var(--accent);
