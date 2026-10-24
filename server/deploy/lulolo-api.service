@@ -1,0 +1,27 @@
+# systemd unit for the contact API. Install with:
+#   sudo cp deploy/lulolo-api.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now lulolo-api
+[Unit]
+Description=LULOLO contact API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=lulolo
+WorkingDirectory=/opt/lulolo-api
+ExecStart=/usr/bin/node --env-file=/opt/lulolo-api/.env src/server.ts
+Restart=on-failure
+RestartSec=5
+
+# Hardening: the service only needs to read its own files and open sockets.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

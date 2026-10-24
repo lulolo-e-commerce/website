@@ -1,0 +1,9 @@
+# Caddy gets and renews the HTTPS certificate for api.lulolo.com on its own.
+# Copy to /etc/caddy/Caddyfile (or add this block to it) and run:
+#   sudo systemctl reload caddy
+api.lulolo.com {
+	reverse_proxy 127.0.0.1:8787
+	request_body {
+		max_size 64KB
+	}
+}
