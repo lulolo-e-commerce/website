@@ -16,7 +16,7 @@ Without `SMTP_HOST` set, emails are printed to the console instead of sent.
 
 ## Deploy on a VPS (Debian/Ubuntu)
 
-1. **DNS.** At Alibaba Cloud DNS, add an `A` record `api` → your VPS's IPv4
+1. **DNS.** At Alibaba Cloud DNS, add an `A` record `office` → your VPS's IPv4
    address (and `AAAA` for IPv6 if it has one).
 2. **Install Node and Caddy.** Node 22.18+ from NodeSource or your distro,
    and Caddy from https://caddyserver.com/docs/install.
@@ -36,10 +36,10 @@ Without `SMTP_HOST` set, emails are printed to the console instead of sent.
    sudo systemctl daemon-reload && sudo systemctl enable --now lulolo-api
    sudo cp deploy/Caddyfile /etc/caddy/Caddyfile && sudo systemctl reload caddy
    ```
-5. **Check it.** `curl https://api.lulolo.com/health` should print `{"ok":true}`.
+5. **Check it.** `curl https://office.lulolo.com/health` should print `{"ok":true}`.
    Logs: `journalctl -u lulolo-api -f`.
 6. **Point the site at it.** In `src/content.ts`, set `contact.form.endpoint`
-   to `https://api.lulolo.com/contact` and deploy the site.
+   to `https://office.lulolo.com/contact` and deploy the site.
 
 Ports 80 and 443 must be open for Caddy. Outgoing port 465 must be open for
 SMTP; some VPS providers block outgoing mail ports until you ask.
