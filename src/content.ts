@@ -4,9 +4,9 @@
 
 export const site = {
   name: 'LULOLO',
-  title: 'LULOLO | VPS hosting with engineers on demand',
+  title: 'LULOLO | Web hosting, VPS and engineers on demand',
   description:
-    'Fast VPS hosting from €9.99 a month. When you need software built, buy a point card and a real engineer delivers web applications, data pipelines or AI agents.',
+    'Web hosting from €2.99 a month and fast VPS from €9.99. When you need software built, buy a point card and a real engineer delivers web applications, data pipelines or AI agents.',
   email: 'info@lulolo.com',
   callUrl: 'mailto:info@lulolo.com?subject=Intro%20call',
   // Shown in the footer. Leave empty to hide.
@@ -14,31 +14,60 @@ export const site = {
 };
 
 export const hero = {
-  eyebrow: 'Cloud servers, engineers on demand',
-  headline: 'Your server. Our engineers.',
+  eyebrow: 'Web hosting, cloud servers, engineers on demand',
+  headline: 'Your site. Your server. Our engineers.',
   cta: 'See plans',
   more: 'Talk to an engineer',
-  // Intro under the headline: "{lead} {price}. {middle} {services}."
-  // The price and services are highlighted on the page.
+  // Intro under the headline:
+  // "{hostingLead} {hostingPrice} {lead} {price}. {middle} {services}."
+  // The prices and services are highlighted on the page.
   lede: {
-    lead: 'A fast VPS from',
-    price: '€9.99 a month',
+    hostingLead: 'Web hosting from',
+    hostingPrice: '€2.99 a month',
+    lead: 'and a fast VPS from',
+    price: '€9.99',
     middle: 'When you need something built, buy points and a real engineer delivers it:',
     services: ['web applications', 'data pipelines', 'AI agents'],
   },
-  // Callouts on the hero drawing, one per speciality.
+  // Callouts on the hero drawing: one per speciality, plus the server it runs on.
   drawing: {
     pipeline: 'Data pipelines',
     app: 'Web applications',
     agent: 'AI agents',
+    hosting: 'Hosting & VPS',
   },
 };
 
-// TODO: the Plus and Pro tiers and all point card prices are placeholders.
+// TODO: the web hosting plans and the Plus and Pro tiers are placeholders.
 // Replace them with your real numbers before launch.
 export const pricing = {
   eyebrow: 'Pricing',
   heading: 'One subscription. Points when you need more.',
+  hosting: {
+    heading: 'Web hosting',
+    body: 'Cheap, managed hosting for websites, blogs and shops. We look after the server, you upload your site. Every plan comes with unlimited traffic.',
+    period: '/month',
+    choose: 'Choose',
+    badge: 'Start here',
+    plans: [
+      {
+        name: 'Starter',
+        price: '€2.99',
+        featured: true,
+        specs: ['1 website', '10 GB SSD', 'Free SSL certificate', 'Unlimited traffic'],
+      },
+      {
+        name: 'Business',
+        price: '€5.99',
+        specs: ['10 websites', '50 GB SSD', 'Free SSL certificates', 'Unlimited traffic'],
+      },
+      {
+        name: 'Unlimited',
+        price: '€9.99',
+        specs: ['Unlimited websites', '100 GB SSD', 'Free SSL certificates', 'Unlimited traffic'],
+      },
+    ],
+  },
   vps: {
     heading: 'VPS plans',
     body: 'Billed monthly. Every plan comes with unlimited traffic.',
@@ -72,9 +101,9 @@ export const pricing = {
     perPoint: 'per point',
     choose: 'Buy',
     cards: [
-      { points: 10, price: 490 },
-      { points: 50, price: 2250 },
-      { points: 100, price: 4000 },
+      { points: 10, price: 300 },
+      { points: 50, price: 1350 },
+      { points: 100, price: 2500 },
     ],
   },
 };
@@ -85,6 +114,7 @@ export const euros = (n: number) =>
 
 // How each plan and card is named in the contact form's "Interested in" list.
 export const planLabel = {
+  hosting: (p: { name: string; price: string }) => `Web hosting ${p.name} (${p.price}${pricing.hosting.period})`,
   vps: (p: { name: string; price: string }) => `VPS ${p.name} (${p.price}${pricing.vps.period})`,
   points: (c: { points: number; price: number }) => `${c.points}-point card (${euros(c.price)})`,
 };
@@ -172,7 +202,7 @@ export const contact = {
   eyebrow: 'Contact',
   heading: 'Order a plan or tell us what to build.',
   body:
-    'Pick a plan or a point card, or describe what you need. A real person replies to set up your server or send you an estimate in points.',
+    'Pick a plan or a point card, or describe what you need. A real person replies to set up your hosting or server, or send you an estimate in points.',
   secondary: 'Ask for a 30-minute call by email',
   form: {
     // Paste a form service URL here (e.g. https://formspree.io/f/xxxxxxx) to

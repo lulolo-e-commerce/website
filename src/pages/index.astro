@@ -8,7 +8,7 @@ import { site, hero, pricing, about, services, contact, euros, planLabel } from 
 // Separator before item i of a list: "a, b and c" (or "a, b or c").
 const sep = (i: number, n: number, last = 'and') => (i === 0 ? '' : i === n - 1 ? ` ${last} ` : ', ');
 const { lede } = hero;
-const { vps, points } = pricing;
+const { hosting, vps, points } = pricing;
 // Each sentence of the headline starts on its own line, and hyphenated words
 // like "enterprise-grade" never split across lines.
 const headlineSentences = hero.headline.split(/(?<=\.)\s+/).map((s) => s.split(' '));
@@ -29,6 +29,13 @@ const jsonLd = {
       description: site.description,
       knowsAbout: [...lede.services, ...services.languages],
       makesOffer: [
+        ...hosting.plans.map((p) => ({
+          '@type': 'Offer',
+          name: `Web hosting ${p.name}`,
+          description: p.specs.join(', '),
+          price: p.price.replace(/[^\d.]/g, ''),
+          priceCurrency: 'EUR',
+        })),
         ...vps.plans.map((p) => ({
           '@type': 'Offer',
           name: `VPS ${p.name}`,
@@ -130,7 +137,8 @@ const jsonLd = {
               ))}
             </h1>
             <p class="lede">
-              {lede.lead} <strong>{lede.price}</strong>. {lede.middle}{' '}
+              {lede.hostingLead} <strong>{lede.hostingPrice}</strong> {lede.lead} <strong>{lede.price}</strong>.{' '}
+              {lede.middle}{' '}
               {lede.services.map((x, i) => <>{sep(i, lede.services.length, 'or')}<strong>{x}</strong></>)}.
             </p>
             <div class="actions">
@@ -149,6 +157,28 @@ const jsonLd = {
           <div class="section-head" data-reveal>
             <span class="eyebrow">{pricing.eyebrow}</span>
             <h2 id="pricing-heading">{pricing.heading}</h2>
+          </div>
+
+          <div class="price-group">
+            <div class="price-group-head" data-reveal>
+              <h3>{hosting.heading}</h3>
+              <p>{hosting.body}</p>
+            </div>
+            <ul class="price-cards">
+              {hosting.plans.map((p) => (
+                <li class:list={['price-card', { featured: p.featured }]}>
+                  {p.featured && <span class="badge">{hosting.badge}</span>}
+                  <h4>{p.name}</h4>
+                  <p class="price"><span class="amount">{p.price}</span> {hosting.period}</p>
+                  <ul class="specs">
+                    {p.specs.map((x) => <li>{x}</li>)}
+                  </ul>
+                  <a class:list={['button', { quiet: !p.featured }]} href="#contact" data-plan={planLabel.hosting(p)}>
+                    {hosting.choose} {p.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div class="price-group">
@@ -542,7 +572,7 @@ const jsonLd = {
     color: var(--lead);
   }
 
-  /* Pricing: VPS plans, then point cards, three cards per row. */
+  /* Pricing: web hosting, VPS plans, then point cards, three cards per row. */
   .price-group + .price-group {
     margin-top: clamp(4rem, 9vw, 6rem);
   }

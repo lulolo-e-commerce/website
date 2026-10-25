@@ -1,7 +1,7 @@
 ---
 // Hero drawing: the three specialities as one system, drawn like a technical
 // diagram. Sources feed a data pipeline, the pipeline feeds a web app, and an
-// AI agent works across both.
+// AI agent works across both, all running on a server we host.
 import { hero } from '../content';
 
 const sources = [140, 185, 230];
@@ -20,10 +20,12 @@ const cells = [
 const sourceRoutes = ['M84,155 L110,194 L118,200 H289', 'M84,200 H289', 'M84,245 L110,206 L118,200 H289'];
 const readRoute = 'M180,220 L185,301';
 const actRoute = 'M223,312 L290,285';
-const { pipeline, app, agent } = hero.drawing;
+// Server rack in the bottom-left corner: one row per slot, the middle one lit.
+const slots = [296, 320, 344];
+const { pipeline, app, agent, hosting } = hero.drawing;
 ---
 
-<figure class="drawing" aria-label="Diagram: data sources feed a data pipeline, which feeds a web application. An AI agent works across both.">
+<figure class="drawing" aria-label="Diagram: data sources feed a data pipeline, which feeds a web application. An AI agent works across both, and everything runs on a hosted server.">
   <svg viewBox="0 0 520 420" aria-hidden="true">
     <defs>
       <linearGradient id="hero-orb" x1="0" y1="0" x2="1" y2="1">
@@ -45,6 +47,9 @@ const { pipeline, app, agent } = hero.drawing;
       <!-- web app window -->
       <rect x="290" y="90" width="200" height="220" rx="10" pathLength="1" />
       <line x1="290" y1="112" x2="490" y2="112" pathLength="1" />
+      <!-- server rack -->
+      <rect x="20" y={slots[0]} width="96" height="72" rx="8" pathLength="1" />
+      {slots.slice(1).map((y) => <line x1="20" y1={y} x2="116" y2={y} pathLength="1" />)}
     </g>
 
     <!-- highlight behind the app row being updated (animated) -->
@@ -63,6 +68,9 @@ const { pipeline, app, agent } = hero.drawing;
       <!-- flow: pipeline into app -->
       <line class="flow" x1="250" y1="200" x2="289" y2="200" pathLength="1" />
       <polyline class="flow" points="282,194 289,200 282,206" pathLength="1" />
+      <!-- server slots, and the pipeline running on the server -->
+      {slots.map((y) => <line class="text" x1="30" y1={y + 12} x2="70" y2={y + 12} pathLength="1" />)}
+      <line class="flow" x1="100" y1="296" x2="126" y2="220" pathLength="1" />
       <!-- app contents -->
       <line class="text" x1="302" y1="101" x2="350" y2="101" pathLength="1" />
       <line class="header" x1="302" y1="135" x2="478" y2="135" pathLength="1" />
@@ -87,10 +95,13 @@ const { pipeline, app, agent } = hero.drawing;
       <polyline points="130,180 130,58 138,58" pathLength="1" />
       <polyline points="318,90 318,40 326,40" pathLength="1" />
       <polyline class="accent" points="215,339 240,372 250,372" pathLength="1" />
+      <polyline points="68,368 68,392 76,392" pathLength="1" />
     </g>
+    {slots.map((y, i) => <circle class:list={['led', { on: i === 1 }]} cx="104" cy={y + 12} r="3" />)}
     <circle class="dot" cx="130" cy="180" r="2.5" />
     <circle class="dot" cx="318" cy="90" r="2.5" />
     <circle class="dot accent" cx="200" cy="320" r="3" />
+    <circle class="dot" cx="68" cy="368" r="2.5" />
 
     <!-- packets moving through the system (animated) -->
     {sourceRoutes.map((d) => <circle class="fx-source" r="2.5" data-route={d} />)}
@@ -101,6 +112,7 @@ const { pipeline, app, agent } = hero.drawing;
   <span class="note note-pipeline">{pipeline}</span>
   <span class="note note-app">{app}</span>
   <span class="note note-agent">{agent}</span>
+  <span class="note note-hosting">{hosting}</span>
 </figure>
 
 <script>
@@ -240,6 +252,11 @@ const { pipeline, app, agent } = hero.drawing;
   .note-pipeline { left: 26.5%; top: 13.8%; }
   .note-app { left: 62.7%; top: 9.5%; }
   .note-agent { left: 48.1%; top: 88.6%; color: var(--accent); }
+  .note-hosting { left: 14.6%; top: 93.3%; }
+
+  /* Server status lights; the lit one blinks once the drawing is in. */
+  .led { fill: var(--lead); }
+  .led.on { fill: var(--accent); }
 
   /* One orchestrated draw-in on load: structure, then flow, then the agent and labels. */
   @media (prefers-reduced-motion: no-preference) {
@@ -257,12 +274,13 @@ const { pipeline, app, agent } = hero.drawing;
       animation: draw 0.8s cubic-bezier(0.6, 0, 0.2, 1) forwards, fill-in 0.6s ease-out forwards;
       animation-delay: 0.1s, 0.4s;
     }
-    .agent, .agent-halo, .dot, .note {
+    .agent, .agent-halo, .dot, .note, .led {
       opacity: 0;
       animation: appear 0.4s ease-out forwards;
     }
     .agent, .agent-halo { animation-delay: 1.15s; }
-    .dot { animation-delay: 1.6s; }
+    .dot, .led { animation-delay: 1.6s; }
+    .led.on { animation: appear 0.4s ease-out 1.6s forwards, blink 2s ease-in-out 2.3s infinite; }
     .note { animation-delay: 1.85s; }
   }
   /* Flow animation elements stay hidden unless the script runs them. */
@@ -282,6 +300,7 @@ const { pipeline, app, agent } = hero.drawing;
     opacity: 0;
   }
   @keyframes appear { to { opacity: 1; } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
   @keyframes fill-in { to { fill-opacity: 1; } }
   /* Chrome cuts the end off dashed non-scaling strokes, so the dash is dropped
      once each stroke is drawn. */
