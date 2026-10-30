@@ -8,7 +8,7 @@ import { site, hero, pricing, about, services, contact, euros, planLabel } from 
 // Separator before item i of a list: "a, b and c" (or "a, b or c").
 const sep = (i: number, n: number, last = 'and') => (i === 0 ? '' : i === n - 1 ? ` ${last} ` : ', ');
 const { lede } = hero;
-const { hosting, vps, points } = pricing;
+const { vps, points } = pricing;
 // Each sentence of the headline starts on its own line, and hyphenated words
 // like "enterprise-grade" never split across lines.
 const headlineSentences = hero.headline.split(/(?<=\.)\s+/).map((s) => s.split(' '));
@@ -29,23 +29,16 @@ const jsonLd = {
       description: site.description,
       knowsAbout: [...lede.services, ...services.languages],
       makesOffer: [
-        ...hosting.plans.map((p) => ({
+        {
           '@type': 'Offer',
-          name: `Web hosting ${p.name}`,
-          description: p.specs.join(', '),
-          price: p.price.replace(/[^\d.]/g, ''),
+          name: `VPS ${vps.name}`,
+          description: `${vps.name}, ${vps.highlight}`,
+          price: vps.price.replace(/[^\d.]/g, ''),
           priceCurrency: 'EUR',
-        })),
-        ...vps.plans.map((p) => ({
-          '@type': 'Offer',
-          name: `VPS ${p.name}`,
-          description: p.specs.join(', '),
-          price: p.price.replace(/[^\d.]/g, ''),
-          priceCurrency: 'EUR',
-        })),
+        },
         ...points.cards.map((c) => ({
           '@type': 'Offer',
-          name: `${c.points}-point card`,
+          name: `${c.points} engineer points`,
           price: String(c.price),
           priceCurrency: 'EUR',
         })),
@@ -137,7 +130,7 @@ const jsonLd = {
               ))}
             </h1>
             <p class="lede">
-              {lede.hostingLead} <strong>{lede.hostingPrice}</strong> {lede.lead} <strong>{lede.price}</strong>.{' '}
+              {lede.lead} <strong>{lede.price}</strong>.{' '}
               {lede.middle}{' '}
               {lede.services.map((x, i) => <>{sep(i, lede.services.length, 'or')}<strong>{x}</strong></>)}.
             </p>
@@ -161,53 +154,22 @@ const jsonLd = {
 
           <div class="price-group">
             <div class="price-group-head" data-reveal>
-              <h3>{hosting.heading}</h3>
-              <p>{hosting.body}</p>
-            </div>
-            <ul class="price-cards">
-              {hosting.plans.map((p) => (
-                <li class:list={['price-card', { featured: p.featured }]}>
-                  {p.featured && <span class="badge">{hosting.badge}</span>}
-                  <h4>{p.name}</h4>
-                  <p class="price"><span class="amount">{p.price}</span> {hosting.period}</p>
-                  <ul class="specs">
-                    {p.specs.map((x) => <li>{x}</li>)}
-                  </ul>
-                  <a class:list={['button', { quiet: !p.featured }]} href="#contact" data-plan={planLabel.hosting(p)}>
-                    {hosting.choose} {p.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div class="price-group">
-            <div class="price-group-head" data-reveal>
               <h3>{vps.heading}</h3>
               <p>{vps.body}</p>
             </div>
-            <ul class="price-cards">
-              {vps.plans.map((p) => (
-                <li class:list={['price-card', { featured: p.featured }]}>
-                  {p.featured && <span class="badge">{vps.badge}</span>}
-                  <h4>{p.name}</h4>
-                  <p class="price"><span class="amount">{p.price}</span> {vps.period}</p>
-                  <ul class="specs">
-                    {p.specs.map((x) => <li>{x}</li>)}
-                  </ul>
-                  <a class:list={['button', { quiet: !p.featured }]} href="#contact" data-plan={planLabel.vps(p)}>
-                    {vps.choose} {p.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <div class="price-card featured vps-offer">
+              <div>
+                <h4><span class="vps-start">{vps.start}</span> {vps.name}, <span class="vps-highlight">{vps.highlight}</span></h4>
+                <p class="price">{vps.priceLead} <span class="amount">{vps.price}</span> {vps.period}</p>
+              </div>
+              <a class="button" href="#contact" data-plan={planLabel.vps}>{vps.choose}</a>
+            </div>
           </div>
 
           <div class="price-group">
             <div class="price-group-head" data-reveal>
               <h3>{points.heading}</h3>
               <p>{points.body}</p>
-              <p class="rate"><code>{points.rate}</code></p>
             </div>
             <ul class="price-cards">
               {points.cards.map((c) => (
@@ -518,8 +480,7 @@ const jsonLd = {
     font-weight: 500;
   }
   .lede code,
-  .section-lede code,
-  .rate code {
+  .section-lede code {
     font-family: var(--font-mono);
     font-size: 0.75em;
     color: var(--ink);
@@ -572,7 +533,7 @@ const jsonLd = {
     color: var(--lead);
   }
 
-  /* Pricing: web hosting, VPS plans, then point cards, three cards per row. */
+  /* Pricing: one wide VPS offer, then engineer points, three cards per row. */
   .price-group + .price-group {
     margin-top: clamp(4rem, 9vw, 6rem);
   }
@@ -588,9 +549,6 @@ const jsonLd = {
   .price-group-head p {
     margin-top: 0.75rem;
     color: var(--lead);
-  }
-  .price-group-head .rate {
-    margin-top: 1rem;
   }
   .price-cards {
     display: grid;
@@ -611,17 +569,6 @@ const jsonLd = {
   }
   .price-card.featured {
     box-shadow: inset 0 0 0 2px var(--button);
-  }
-  .badge {
-    position: absolute;
-    top: 1.25rem;
-    right: 1.25rem;
-    padding: 0.25em 0.75em;
-    font-size: var(--step--1);
-    font-weight: 500;
-    color: var(--on-accent);
-    background: var(--button);
-    border-radius: 999px;
   }
   .price-card h4 {
     margin: 0;
@@ -658,6 +605,26 @@ const jsonLd = {
   }
   .price-card .button {
     margin-top: auto;
+  }
+  .price-card.vps-offer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 14rem;
+    gap: 2rem clamp(2rem, 5vw, 4rem);
+    align-items: center;
+    max-width: 60rem;
+    margin-inline: auto;
+  }
+  .vps-start {
+    font-weight: 400;
+    color: var(--lead);
+  }
+  .vps-highlight {
+    color: var(--accent);
+  }
+  @media (max-width: 56rem) {
+    .price-card.vps-offer {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
   /* Secondary buttons: accent text on a pale wash. */
   .button.quiet {

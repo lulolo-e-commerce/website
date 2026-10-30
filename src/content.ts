@@ -4,9 +4,9 @@
 
 export const site = {
   name: 'LULOLO',
-  title: 'LULOLO | Web hosting, VPS and engineers on demand',
+  title: 'LULOLO | VPS and engineers on demand',
   description:
-    'Web hosting from €2.99 a month and fast VPS from €9.99. When you need software built, buy a point card and a real engineer delivers web applications, data pipelines or AI agents.',
+    'A VPS with 4 vCPU and 8 GB RAM from €9.99 a month. When you need software built, buy engineer points and a real engineer delivers web applications, data pipelines or AI agents.',
   email: 'info@lulolo.com',
   callUrl: 'mailto:info@lulolo.com?subject=Intro%20call',
   // Shown in the footer. Leave empty to hide.
@@ -14,18 +14,16 @@ export const site = {
 };
 
 export const hero = {
-  eyebrow: 'Web hosting, cloud servers, engineers on demand',
-  headline: 'Your site. Your server. Our engineers.',
-  cta: 'See plans',
+  eyebrow: 'Cloud servers, engineers on demand',
+  headline: 'Your server. Our engineers.',
+  cta: 'See pricing',
   more: 'Talk to an engineer',
   // Intro under the headline:
-  // "{hostingLead} {hostingPrice} {lead} {price}. {middle} {services}."
-  // The prices and services are highlighted on the page.
+  // "{lead} {price}. {middle} {services}."
+  // The price and services are highlighted on the page.
   lede: {
-    hostingLead: 'Web hosting from',
-    hostingPrice: '€2.99 a month',
-    lead: 'and a fast VPS from',
-    price: '€9.99',
+    lead: 'A VPS with 4 vCPU and 8 GB RAM from',
+    price: '€9.99 a month',
     middle: 'When you need something built, buy points and a real engineer delivers it:',
     services: ['web applications', 'data pipelines', 'AI agents'],
   },
@@ -34,70 +32,28 @@ export const hero = {
     pipeline: 'Data pipelines',
     app: 'Web applications',
     agent: 'AI agents',
-    hosting: 'Hosting & VPS',
+    server: 'VPS',
   },
 };
 
-// TODO: the web hosting plans and the Plus and Pro tiers are placeholders.
-// Replace them with your real numbers before launch.
 export const pricing = {
   eyebrow: 'Pricing',
   heading: 'One subscription. Points when you need more.',
-  hosting: {
-    heading: 'Web hosting',
-    body: 'Cheap, managed hosting for websites, blogs and shops. We look after the server, you upload your site. Every plan comes with unlimited traffic.',
-    period: '/month',
-    choose: 'Choose',
-    badge: 'Start here',
-    plans: [
-      {
-        name: 'Starter',
-        price: '€2.99',
-        featured: true,
-        specs: ['1 website', '10 GB SSD', 'Free SSL certificate', 'Unlimited traffic'],
-      },
-      {
-        name: 'Business',
-        price: '€5.99',
-        specs: ['10 websites', '50 GB SSD', 'Free SSL certificates', 'Unlimited traffic'],
-      },
-      {
-        name: 'Unlimited',
-        price: '€9.99',
-        specs: ['Unlimited websites', '100 GB SSD', 'Free SSL certificates', 'Unlimited traffic'],
-      },
-    ],
-  },
   vps: {
-    heading: 'VPS plans',
-    body: 'Billed monthly. Every plan comes with unlimited traffic.',
+    heading: 'VPS',
+    body: 'Billed monthly. Need more power? Tell us and we’ll size a bigger server.',
+    // Reads as "{start} {name}, {highlight} {priceLead} {price}{period}".
+    start: 'Starts with',
+    name: '4 vCPU, 8 GB RAM, 100 GB SSD',
+    priceLead: 'for only',
+    price: '€9.99',
     period: '/month',
-    choose: 'Choose',
-    // `featured` highlights one plan; `badge` is the label shown on it.
-    badge: 'Start here',
-    plans: [
-      {
-        name: 'Basic',
-        price: '€9.99',
-        featured: true,
-        specs: ['4 CPU cores', '8 GB RAM', '100 GB SSD', '200 Mbit/s port', 'Unlimited traffic'],
-      },
-      {
-        name: 'Plus',
-        price: '€19.99',
-        specs: ['8 CPU cores', '16 GB RAM', '200 GB SSD', '500 Mbit/s port', 'Unlimited traffic'],
-      },
-      {
-        name: 'Pro',
-        price: '€39.99',
-        specs: ['16 CPU cores', '32 GB RAM', '400 GB SSD', '1 Gbit/s port', 'Unlimited traffic'],
-      },
-    ],
+    highlight: 'unlimited traffic',
+    choose: 'Get your VPS',
   },
   points: {
-    heading: 'Point cards',
+    heading: 'Engineer Points',
     body: 'Points pay for development work. Tell us what you need, an engineer replies with an estimate in points, and builds it once you agree.',
-    rate: '1 point = 1 hour of engineer time',
     perPoint: 'per point',
     choose: 'Buy',
     cards: [
@@ -108,15 +64,14 @@ export const pricing = {
   },
 };
 
-// Whole euros for point card prices, e.g. €2,250.
+// Whole euros for engineer point prices, e.g. €2,250.
 export const euros = (n: number) =>
   new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
 
 // How each plan and card is named in the contact form's "Interested in" list.
 export const planLabel = {
-  hosting: (p: { name: string; price: string }) => `Web hosting ${p.name} (${p.price}${pricing.hosting.period})`,
-  vps: (p: { name: string; price: string }) => `VPS ${p.name} (${p.price}${pricing.vps.period})`,
-  points: (c: { points: number; price: number }) => `${c.points}-point card (${euros(c.price)})`,
+  vps: `VPS ${pricing.vps.name} (${pricing.vps.price}${pricing.vps.period})`,
+  points: (c: { points: number; price: number }) => `${c.points} engineer points (${euros(c.price)})`,
 };
 
 export const about = {
@@ -127,10 +82,10 @@ export const about = {
   chapters: [
     {
       title: 'A real person, start to finish',
-      body: 'Buy a point card and tell us what you need. An engineer talks it through with you, agrees the result and the points it will take, then builds it and delivers it to your server. You always deal with a person, never a ticket queue.',
+      body: 'Buy engineer points and tell us what you need. An engineer talks it through with you, agrees the result and the points it will take, then builds it and delivers it to your server. You always deal with a person, never a ticket queue.',
       diagram: 'points',
-      label: 'Diagram: points from your card go to an engineer, who talks with you and delivers the finished work to your server.',
-      notes: { card: 'point card', person: 'engineer', talk: 'agree the result', server: 'delivered to your VPS' },
+      label: 'Diagram: your points go to an engineer, who talks with you and delivers the finished work to your server.',
+      notes: { card: 'engineer points', person: 'engineer', talk: 'agree the result', server: 'delivered to your VPS' },
     },
     {
       title: 'AI in every step of the work',
@@ -200,9 +155,9 @@ export const services = {
 
 export const contact = {
   eyebrow: 'Contact',
-  heading: 'Order a plan or tell us what to build.',
+  heading: 'Order a VPS or tell us what to build.',
   body:
-    'Pick a plan or a point card, or describe what you need. A real person replies to set up your hosting or server, or send you an estimate in points.',
+    'Pick a VPS or engineer points, or describe what you need. A real person replies to set up your server or send you an estimate in points.',
   secondary: 'Ask for a 30-minute call by email',
   form: {
     // Paste a form service URL here (e.g. https://formspree.io/f/xxxxxxx) to

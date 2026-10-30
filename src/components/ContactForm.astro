@@ -4,8 +4,7 @@ import { site, contact, pricing, planLabel } from '../content';
 const { form } = contact;
 const action = form.endpoint || `mailto:${site.email}`;
 const plans = [
-  ...pricing.hosting.plans.map(planLabel.hosting),
-  ...pricing.vps.plans.map(planLabel.vps),
+  planLabel.vps,
   ...pricing.points.cards.map(planLabel.points),
 ];
 ---

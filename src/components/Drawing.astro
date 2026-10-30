@@ -22,7 +22,7 @@ const readRoute = 'M180,220 L185,301';
 const actRoute = 'M223,312 L290,285';
 // Server rack in the bottom-left corner: one row per slot, the middle one lit.
 const slots = [296, 320, 344];
-const { pipeline, app, agent, hosting } = hero.drawing;
+const { pipeline, app, agent, server } = hero.drawing;
 ---
 
 <figure class="drawing" aria-label="Diagram: data sources feed a data pipeline, which feeds a web application. An AI agent works across both, and everything runs on a hosted server.">
@@ -112,7 +112,7 @@ const { pipeline, app, agent, hosting } = hero.drawing;
   <span class="note note-pipeline">{pipeline}</span>
   <span class="note note-app">{app}</span>
   <span class="note note-agent">{agent}</span>
-  <span class="note note-hosting">{hosting}</span>
+  <span class="note note-server">{server}</span>
 </figure>
 
 <script>
@@ -252,7 +252,7 @@ const { pipeline, app, agent, hosting } = hero.drawing;
   .note-pipeline { left: 26.5%; top: 13.8%; }
   .note-app { left: 62.7%; top: 9.5%; }
   .note-agent { left: 48.1%; top: 88.6%; color: var(--accent); }
-  .note-hosting { left: 14.6%; top: 93.3%; }
+  .note-server { left: 14.6%; top: 93.3%; }
 
   /* Server status lights; the lit one blinks once the drawing is in. */
   .led { fill: var(--lead); }
