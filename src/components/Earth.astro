@@ -1,0 +1,392 @@
+---
+// Hero background: a dotted Earth, one dot per patch of land, slowly turning
+// behind the headline, with internet traffic arcing between city hubs above
+// its surface. Drawn on a canvas and driven by Motion: a linear spin, one
+// looping tween per signal, a spring that leans the globe toward the pointer,
+// and a scroll-linked drift. The dots come from Natural Earth land (110m),
+// sampled on an even grid.
+---
+
+<div class="earth" aria-hidden="true">
+  <canvas></canvas>
+</div>
+
+<script>
+  import { animate, motionValue, scroll, inView } from 'motion';
+  import dots from '../earth-dots.json';
+
+  const root = document.querySelector<HTMLElement>('.earth')!;
+  const canvas = root.querySelector('canvas')!;
+  const ctx = canvas.getContext('2d')!;
+  const hero = root.closest<HTMLElement>('.hero') ?? root;
+  // The globe is sized and placed against the headline block.
+  const anchor = hero.querySelector<HTMLElement>('.hero-text') ?? root;
+
+  const rad = Math.PI / 180;
+  type Vec = [number, number, number];
+  const toVec = (lat: number, lon: number): Vec => [
+    Math.cos(lat * rad) * Math.sin(lon * rad),
+    Math.sin(lat * rad),
+    Math.cos(lat * rad) * Math.cos(lon * rad),
+  ];
+
+  // Unit vectors for every land dot, computed once.
+  const count = dots.length / 2;
+  const px = new Float32Array(count);
+  const py = new Float32Array(count);
+  const pz = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    [px[i], py[i], pz[i]] = toVec(dots[i * 2] / 10, dots[i * 2 + 1] / 10);
+  }
+
+  // Internet hubs, roughly where the big exchanges and cable landings are.
+  const hubs: Vec[] = [
+    [50.1, 8.7], // 0 Frankfurt
+    [51.5, -0.1], // 1 London
+    [52.4, 4.9], // 2 Amsterdam
+    [40.7, -74.0], // 3 New York
+    [39.0, -77.5], // 4 Ashburn
+    [37.4, -122.1], // 5 San Francisco
+    [-23.5, -46.6], // 6 São Paulo
+    [6.5, 3.4], // 7 Lagos
+    [-26.2, 28.0], // 8 Johannesburg
+    [25.2, 55.3], // 9 Dubai
+    [19.1, 72.9], // 10 Mumbai
+    [1.35, 103.8], // 11 Singapore
+    [35.7, 139.7], // 12 Tokyo
+    [-33.9, 151.2], // 13 Sydney
+    [59.3, 18.1], // 14 Stockholm
+    [43.7, -79.4], // 15 Toronto
+    [40.4, -3.7], // 16 Madrid
+    [22.3, 114.2], // 17 Hong Kong
+    [30.0, 31.2], // 18 Cairo
+    [55.8, 37.6], // 19 Moscow
+  ].map(([lat, lon]) => toVec(lat, lon));
+
+  const links: [number, number][] = [
+    [0, 3], [1, 4], [2, 15], [16, 6], [3, 5], [4, 6], [1, 7], [7, 8], [16, 7],
+    [0, 9], [9, 10], [10, 11], [11, 17], [17, 12], [12, 5], [11, 13], [13, 5],
+    [0, 14], [14, 19], [19, 9], [18, 9], [0, 18], [8, 10], [2, 0], [12, 13],
+  ];
+
+  // Each link is a great-circle path lifted off the surface, higher for longer
+  // hops. Points are sampled once; each frame only rotates them.
+  const STEPS = 48;
+  const arcs = links.map(([a, b]) => {
+    const p = hubs[a], q = hubs[b];
+    const omega = Math.acos(Math.min(1, p[0] * q[0] + p[1] * q[1] + p[2] * q[2]));
+    const lift = 0.06 + 0.22 * (omega / Math.PI);
+    const pts = new Float32Array((STEPS + 1) * 3);
+    for (let s = 0; s <= STEPS; s++) {
+      const t = s / STEPS;
+      const k1 = Math.sin((1 - t) * omega) / Math.sin(omega);
+      const k2 = Math.sin(t * omega) / Math.sin(omega);
+      const h = 1 + lift * Math.sin(Math.PI * t);
+      for (let c = 0; c < 3; c++) pts[s * 3 + c] = (k1 * p[c] + k2 * q[c]) * h;
+    }
+    // Progress runs 0 → 1.6: the head travels until 1, the tail catches up by
+    // 1.45, and the destination pings in between.
+    return { pts, to: b, progress: motionValue(0) };
+  });
+
+  // Spin is the longitude facing the viewer; tilt leans the north pole toward
+  // us. Start over Europe and Africa.
+  const spin = motionValue(-15);
+  const tilt = motionValue(22);
+  const yaw = motionValue(0);
+  // A shared heartbeat for the hubs' idle glow.
+  const beat = motionValue(0);
+
+  // Dots are bucketed by depth so each frame is a handful of fills.
+  const BUCKETS = 8;
+  const paths: Path2D[] = [];
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+  let accent = '#0066cc';
+  let cx = 0;
+  let cy = 0;
+  let r = 0;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = canvas.clientWidth;
+    height = canvas.clientHeight;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    accent = getComputedStyle(root).getPropertyValue('--accent').trim() || accent;
+    // Measure the headline block relative to the hero, ignoring transforms.
+    let top = 0;
+    for (let el: HTMLElement | null = anchor; el && el !== hero; el = el.offsetParent as HTMLElement | null) {
+      top += el.offsetTop;
+    }
+    const h = anchor.offsetHeight;
+    r = Math.min(width * 0.62, h * 0.9, 780);
+    cx = width / 2;
+    cy = top + h * 0.66;
+    draw();
+  }
+
+  // Current rotation, refreshed at the start of each frame.
+  let sa = 0, ca = 1, st = 0, ct = 1;
+  // Rotate a point and project it; out = [screen x, screen y, depth, visible].
+  const out = new Float32Array(4);
+  function project(x: number, y: number, z: number) {
+    const x1 = x * ca - z * sa;
+    const z1 = x * sa + z * ca;
+    const y2 = y * ct - z1 * st;
+    const z2 = y * st + z1 * ct;
+    out[0] = cx + x1 * r;
+    out[1] = cy - y2 * r;
+    out[2] = z2;
+    // In front of the globe, or lifted far enough to clear its edge.
+    out[3] = z2 > 0 || x1 * x1 + y2 * y2 > 1 ? 1 : 0;
+  }
+
+  function draw() {
+    if (!width) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const dot = Math.max(1.4, r / 190);
+
+    // Atmosphere: a soft glow and a faint limb.
+    const glow = ctx.createRadialGradient(cx, cy, r * 0.7, cx, cy, r * 1.25);
+    glow.addColorStop(0, 'rgb(0 113 227 / 0.07)');
+    glow.addColorStop(1, 'rgb(0 113 227 / 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, width, height);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgb(0 102 204 / 0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    const a = (spin.get() + yaw.get()) * rad;
+    const t = tilt.get() * rad;
+    sa = Math.sin(a); ca = Math.cos(a);
+    st = Math.sin(t); ct = Math.cos(t);
+
+    // Land.
+    for (let b = 0; b < BUCKETS; b++) paths[b] = new Path2D();
+    const back = new Path2D();
+    for (let i = 0; i < count; i++) {
+      project(px[i], py[i], pz[i]);
+      const [sx, sy, z] = out;
+      if (z > 0) {
+        const b = Math.min(BUCKETS - 1, Math.floor(z * BUCKETS));
+        // Dots near the limb are foreshortened, so draw them smaller.
+        const s = dot * (0.55 + 0.45 * z);
+        paths[b].rect(sx - s / 2, sy - s / 2, s, s);
+      } else if (z > -0.6) {
+        back.rect(sx - dot * 0.3, sy - dot * 0.3, dot * 0.6, dot * 0.6);
+      }
+    }
+    ctx.fillStyle = accent;
+    ctx.globalAlpha = 0.06;
+    ctx.fill(back);
+    for (let b = 0; b < BUCKETS; b++) {
+      ctx.globalAlpha = 0.16 + 0.42 * ((b + 0.5) / BUCKETS);
+      ctx.fill(paths[b]);
+    }
+
+    // Routes: every link as a faint dashed path, so the network reads even
+    // between signals.
+    ctx.lineCap = 'round';
+    ctx.setLineDash([2, 5]);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = accent;
+    ctx.globalAlpha = 0.16;
+    ctx.beginPath();
+    for (const arc of arcs) traceArc(arc.pts, 0, STEPS);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Signals: a bright head with a fading tail, then a ping where it lands.
+    const pings: { x: number; y: number; k: number }[] = [];
+    for (const arc of arcs) {
+      const p = arc.progress.get();
+      if (p <= 0) continue;
+      const head = Math.min(p, 1) * STEPS;
+      const tail = Math.min(Math.max(p - 0.45, 0), 1) * STEPS;
+      if (head - tail > 0.01) drawSignal(arc.pts, tail, head);
+      if (p > 1 && p < 1.6) {
+        const q = hubs[arc.to];
+        project(q[0], q[1], q[2]);
+        if (out[2] > 0) pings.push({ x: out[0], y: out[1], k: (p - 1) / 0.6 });
+      }
+    }
+
+    // Hubs: a solid node with a slow glow, plus rings for arriving signals.
+    const pulse = beat.get();
+    for (const q of hubs) {
+      project(q[0], q[1], q[2]);
+      if (out[2] <= 0.05) continue;
+      const depth = Math.min(1, out[2] * 1.6);
+      ctx.globalAlpha = (0.12 + 0.12 * Math.sin(pulse * Math.PI * 2)) * depth;
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.arc(out[0], out[1], dot * 3.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.9 * depth;
+      ctx.beginPath();
+      ctx.arc(out[0], out[1], dot * 1.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.25;
+    for (const { x, y, k } of pings) {
+      ctx.globalAlpha = 0.7 * (1 - k);
+      ctx.beginPath();
+      ctx.arc(x, y, dot * (1.5 + k * 9), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Add the visible stretches of an arc between two sample indices to the
+  // current path.
+  function traceArc(pts: Float32Array, from: number, to: number) {
+    let pen = false;
+    for (let s = Math.floor(from); s <= Math.ceil(to); s++) {
+      project(pts[s * 3], pts[s * 3 + 1], pts[s * 3 + 2]);
+      if (!out[3]) { pen = false; continue; }
+      if (pen) ctx.lineTo(out[0], out[1]);
+      else ctx.moveTo(out[0], out[1]);
+      pen = true;
+    }
+  }
+
+  // Point on an arc at a fractional sample index.
+  function sampleAt(pts: Float32Array, i: number) {
+    const s = Math.min(Math.floor(i), STEPS - 1);
+    const f = i - s;
+    const j = s * 3, k = (s + 1) * 3;
+    project(
+      pts[j] + (pts[k] - pts[j]) * f,
+      pts[j + 1] + (pts[k + 1] - pts[j + 1]) * f,
+      pts[j + 2] + (pts[k + 2] - pts[j + 2]) * f,
+    );
+  }
+
+  function drawSignal(pts: Float32Array, tail: number, head: number) {
+    // The tail fades in over short segments, brightening toward the head.
+    const SEG = 10;
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = Math.max(1.25, r / 320);
+    let px0 = 0, py0 = 0, vis0 = 0;
+    for (let n = 0; n <= SEG; n++) {
+      sampleAt(pts, tail + ((head - tail) * n) / SEG);
+      const [x, y, , vis] = out;
+      if (n > 0 && vis && vis0) {
+        ctx.globalAlpha = 0.85 * (n / SEG);
+        ctx.beginPath();
+        ctx.moveTo(px0, py0);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+      px0 = x; py0 = y; vis0 = vis;
+    }
+    // The head: a bright dot with a halo.
+    sampleAt(pts, head);
+    if (!out[3]) return;
+    ctx.fillStyle = accent;
+    ctx.globalAlpha = 0.18;
+    ctx.beginPath();
+    ctx.arc(out[0], out[1], ctx.lineWidth * 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(out[0], out[1], ctx.lineWidth * 1.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.arc(out[0], out[1], ctx.lineWidth * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Coalesce value changes into at most one draw per animation frame.
+  let queued = false;
+  const schedule = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      draw();
+    });
+  };
+  for (const v of [spin, tilt, yaw, beat]) v.on('change', schedule);
+
+  const sizes = new ResizeObserver(resize);
+  sizes.observe(canvas);
+  sizes.observe(anchor);
+
+  const motionOk = window.matchMedia('(prefers-reduced-motion: no-preference)');
+  if (motionOk.matches) {
+    // Fade and settle in, then turn once every two minutes.
+    animate(root, { opacity: [0, 1], scale: [0.94, 1] }, { duration: 2.2, ease: [0.16, 1, 0.3, 1] });
+    const loops = [
+      animate(spin, spin.get() + 360, { duration: 120, ease: 'linear', repeat: Infinity }),
+      animate(beat, 1, { duration: 2.4, ease: 'linear', repeat: Infinity }),
+      // Each signal loops on its own rhythm, staggered so a few are always in
+      // flight.
+      ...arcs.map((arc) =>
+        animate(arc.progress, [0, 1.6], {
+          duration: 2.2 + Math.random() * 1.8,
+          ease: [0.45, 0, 0.25, 1],
+          delay: 0.8 + Math.random() * 5,
+          repeat: Infinity,
+          repeatDelay: 1.5 + Math.random() * 5,
+        }),
+      ),
+    ];
+
+    // Only animate while the hero is on screen.
+    inView(hero, () => {
+      loops.forEach((l) => l.play());
+      return () => loops.forEach((l) => l.pause());
+    });
+
+    // Lean gently toward the pointer on a soft spring.
+    const spring = { type: 'spring', stiffness: 40, damping: 18 } as const;
+    hero.addEventListener('pointermove', (e) => {
+      const box = hero.getBoundingClientRect();
+      const nx = (e.clientX - box.left) / box.width - 0.5;
+      const ny = (e.clientY - box.top) / box.height - 0.5;
+      animate(yaw, nx * 24, spring);
+      animate(tilt, 22 - ny * 14, spring);
+    });
+    hero.addEventListener('pointerleave', () => {
+      animate(yaw, 0, spring);
+      animate(tilt, 22, spring);
+    });
+
+    // Sink and fade as the hero scrolls away.
+    scroll(animate(canvas, { y: [0, 160], opacity: [1, 0.2] }, { ease: 'linear' }), {
+      target: hero,
+      offset: ['start start', 'end start'],
+    });
+  } else {
+    // Still frame: a few signals caught mid-flight.
+    arcs.forEach((arc, i) => i % 3 === 0 && arc.progress.set(0.55 + (i % 4) * 0.1));
+    schedule();
+  }
+</script>
+
+<style>
+  .earth {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    /* Let the globe dissolve into the page at the bottom of the hero. */
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 92%);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 92%);
+  }
+  .earth canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>

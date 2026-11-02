@@ -3,6 +3,7 @@ import '../styles/global.css';
 import Drawing from '../components/Drawing.astro';
 import ContactForm from '../components/ContactForm.astro';
 import AboutDiagram from '../components/AboutDiagram.astro';
+import Earth from '../components/Earth.astro';
 import { site, hero, pricing, about, services, contact, euros, planLabel } from '../content';
 
 // Separator before item i of a list: "a, b and c" (or "a, b or c").
@@ -117,6 +118,7 @@ const jsonLd = {
 
     <main id="top">
       <section class="band hero" aria-labelledby="hero-heading">
+        <Earth />
         <div class="wrap">
           <div class="hero-text" data-reveal>
             <span class="eyebrow">{hero.eyebrow}</span>
@@ -450,9 +452,15 @@ const jsonLd = {
 
   /* Hero: centered, very large type, the drawing underneath. */
   .hero {
+    position: relative;
+    isolation: isolate;
     padding-block: clamp(4rem, 10vw, 8rem) clamp(2rem, 4vw, 3rem);
     text-align: center;
     overflow: hidden;
+  }
+  .hero > .wrap {
+    position: relative;
+    z-index: 1;
   }
   h1 {
     margin-top: 1rem;
